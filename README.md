@@ -5,24 +5,24 @@ Welcome to your personal AI-powered investment assistant! This project aims to m
 This is the system workflow:
 
 1. Investment Agent:
-   - Collects user preferences via questionnaire.
-   - Produces a structured Strategy.
+  - Collects user preferences via questionnaire.
+  - Produces a structured Strategy.
 
 2. Portfolio Agent:
-   - Translates the Strategy into a concrete ETF portfolio.
+  - Translates the Strategy into a concrete ETF portfolio.
 
 3. Analyst Agents:
-   - Fees Agent:
-     * Retrievesand analyze TER per holding.
-   - Diversification Agent:
-     * Compares and analyze portfolio vs strategy across asset class, geography, sector.
-   - Alignment Agent:
-     * Evaluates how holdings reflect risk tolerance, time horizon, expected returns embedded in the Strategy.
-   - Performance Agent:
-     * Computes CAGR, Annualized Volatility, Sharpe, Max Drawdown, Alpha, Beta and analyze if portfolio is performant.
-   - Analysis Orchestrator:
-     * Runs the above analyst agents and aggregates their outputs.
-     * Provides a structured basis for downstream reporting.
+  - Fees Agent:
+    * Retrievesand analyze TER per holding.
+  - Diversification Agent:
+    * Compares and analyze portfolio vs strategy across asset class, geography, sector.
+  - Alignment Agent:
+    * Evaluates how holdings reflect risk tolerance, time horizon, expected returns embedded in the Strategy.
+  - Performance Agent:
+    * Computes CAGR, Annualized Volatility, Sharpe, Max Drawdown, Alpha, Beta and analyze if portfolio is performant.
+  - Analysis Orchestrator:
+    * Runs the above analyst agents and aggregates their outputs.
+    * Provides a structured basis for downstream reporting.
 
 ![Workflow](assets/workflow.png)
 
