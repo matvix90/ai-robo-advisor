@@ -1,14 +1,14 @@
 from langgraph.graph import StateGraph, START, END
 
-from src.nodes.investment_agents.goal_based import investment_strategy
-from src.nodes.portfolios_agent import create_portfolio
-from src.nodes.analyst_agents.analysis_workflow import create_analyst_graph
+from nodes.investment_agents.goal_based import investment_strategy
+from nodes.portfolios_agent import create_portfolio
+from nodes.analyst_agents.analysis_workflow import create_analyst_graph
 
-from src.graph.state import State
-from src.utils.display import print_strategy, print_portfolio, print_analysis_response
-from src.utils.questionnaires import choose_llm_model, get_user_preferences
+from graph.state import State
+from utils.display import print_strategy, print_portfolio, print_analysis_response
+from utils.questionnaires import choose_llm_model, get_user_preferences
 
-from src.llm.models import load_models, get_llm_model
+from llm.models import load_models, get_llm_model
 
 import argparse
 

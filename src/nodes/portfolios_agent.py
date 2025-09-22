@@ -1,5 +1,5 @@
-from src.graph.state import State
-from src.data.models import PortfolioAgent
+from graph.state import State
+from data.models import PortfolioAgent
 
 
 def create_portfolio(state:State) -> State:

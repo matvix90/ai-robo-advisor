@@ -1,4 +1,4 @@
-from src.data.models import Portfolio, Strategy, AnalysisResponse
+from data.models import Portfolio, Strategy, AnalysisResponse
 
 from colorama import init, Fore, Style
 

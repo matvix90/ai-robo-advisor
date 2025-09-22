@@ -2,9 +2,9 @@ import questionary
 import sys
 from colorama import Fore, Style
 
-from src.data.models import (PortfolioPreference, RiskProfile,
+from data.models import (PortfolioPreference, RiskProfile,
                         InvestmentHorizon, InvestmentGoal, Currency, StockExchange)
-from src.llm.models import AllModels, LLMModel, ModelProvider
+from llm.models import AllModels, LLMModel, ModelProvider
 
 # Simple style configuration
 STYLE = questionary.Style([

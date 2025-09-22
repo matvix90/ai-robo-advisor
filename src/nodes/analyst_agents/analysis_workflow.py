@@ -1,7 +1,7 @@
 from langgraph.graph import StateGraph, END
 
-from src.graph.state import State
-from src.data.models import AnalysisResponse
+from graph.state import State
+from data.models import AnalysisResponse
 from . import alignment, diversification, fees, performance
 
 def start(state: State) -> State:

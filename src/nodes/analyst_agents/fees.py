@@ -1,5 +1,5 @@
-from src.graph.state import State
-from src.data.models import AnalysisAgent
+from graph.state import State
+from data.models import AnalysisAgent
 
 
 def analyze_ter(state:State) -> State:
