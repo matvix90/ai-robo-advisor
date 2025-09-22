@@ -24,6 +24,8 @@ This is the system workflow:
      * Runs the above analyst agents and aggregates their outputs.
      * Provides a structured basis for downstream reporting.
 
+![Workflow](assets/workflow.png)
+
 > **Disclaimer:** This project is for educational and research purposes only. The information provided should not be considered financial advice. Investing in financial markets involves risk, and you should consult with a qualified professional before making any investment decisions.
 
 ## Key Features
