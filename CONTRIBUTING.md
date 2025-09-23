@@ -111,14 +111,12 @@ Then create a Pull Request on GitHub with:
 Based on the project roadmap, these are high-priority areas for contribution:
 
 ### 1. Improve Agents & LLM Integrations
-- Enhance existing agent capabilities
-- Add support for new LLM providers (Anthropic Claude, Google Gemini, etc.)
+- Add support for new LLM providers
 - Improve agent reasoning and decision-making
 
 ### 2. European Market Support
 - Add Financial APIs for European ETFs
 - Implement support for European market data
-- Handle different currencies and market hours
 
 ### 3. Enhanced Questionnaires
 - Improve user onboarding questionnaire
@@ -128,7 +126,6 @@ Based on the project roadmap, these are high-priority areas for contribution:
 ### 4. Docker Integration
 - Create Dockerfile for easy deployment
 - Add docker-compose for development
-- Container orchestration setup
 
 ### 5. Web Interface
 - Django backend development
@@ -137,17 +134,6 @@ Based on the project roadmap, these are high-priority areas for contribution:
 
 ### 6. Testing Framework
 - Unit tests for core functionality
-- Integration tests for API calls
-- Performance testing for large portfolios
-
-## Code Style Guidelines
-
-### Python Code Style
-- Follow PEP 8 conventions
-- Use meaningful variable and function names
-- Add type hints where appropriate
-- Keep functions focused and small
-- Use docstrings for public functions
 
 ## Thank You
 
