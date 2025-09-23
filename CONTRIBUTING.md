@@ -40,7 +40,7 @@ Contributions are what make the open-source community such an amazing place to l
 
 5. **Install dependencies:**
    ```bash
-   pip install -r requirements.txt
+   pip install -e .
    ```
 
 6. **Set up environment variables:**
@@ -51,7 +51,7 @@ Contributions are what make the open-source community such an amazing place to l
 
 7. **Test the setup:**
    ```bash
-   python src/main.py --show-reasoning
+   run-advisor --show-reasoning
    ```
 
 ## Contribution Workflow
