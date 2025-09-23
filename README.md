@@ -55,7 +55,7 @@ Note:
 
 3.  **Install the dependencies:**
     ```bash
-    pip install -r requirements.txt
+    pip install -e .
     ```
 
 4. **Create a `.env` file for your API keys:**
@@ -86,13 +86,13 @@ You can run the AI Robo Advisor directly via terminal. This approach offers more
 
 #### Run the AI Robo Advisor
 ```bash
-python src/main.py
+run-advisor
 ```
 
 You can also specify a `--show-reasoning` flag to run the AI Robo Advisor seeing agents reasoning.
 
 ```bash
-python src/main.py --show-reasoning
+run-advisor --show-reasoning
 ```
 
 #### Example Analysis Response

@@ -1,0 +1,62 @@
+[build-system]
+requires = ["setuptools>=61.0", "wheel"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "ai-robo-advisor"
+version = "0.1.0"
+description = "AI robo-advisor to make professional-grade investment strategies, accessible to everyone."
+readme = "README.md"
+requires-python = ">=3.9"
+license = { text = "MIT" }
+keywords = ["ai", "finance", "robo-advisor", "portfolio", "etf", "langchain", "investment"]
+
+authors = [
+    { name = "Your Name", email = "you@example.com" }
+]
+
+dependencies = [
+    "colorama>=0.4.6,<1.0",
+    "langchain>=0.3.27,<0.4",
+    "langchain-google-genai>=2.1.12,<3.0",
+    "langgraph>=0.6.7,<0.7",
+    "numpy>=2.2.0,<3.0",
+    "pandas>=2.3.0,<3.0",
+    "polygon-api-client>=1.15.0,<2.0",
+    "pydantic>=2.11.0,<3.0",
+    "python-decouple>=3.8,<4.0",
+    "pytz>=2025.1",
+    "questionary>=2.1.0,<3.0",
+    "typing_extensions>=4.15.0,<5.0",
+]
+
+[project.optional-dependencies]
+dev = [
+    "pytest>=8.4.0,<9.0",
+    "black>=24.0.0",
+    "flake8>=7.0.0",
+]
+test = [
+    "pytest>=8.4.0,<9.0",
+    "pytest-cov>=4.0.0",
+    "pytest-mock>=3.12.0",
+]
+
+[project.urls]
+Repository = "https://github.com/matvix90/ai-robo-advisor"
+Issues = "https://github.com/matvix90/ai-robo-advisor/issues"
+Documentation = "https://github.com/matvix90/ai-robo-advisor#readme"
+
+[project.scripts]
+run-advisor = "main:main"
+
+[tool.setuptools.packages.find]
+where = ["src"]
+
+[tool.setuptools.package-dir]
+"" = "src"
+
+[tool.black]
+line-length = 88
+target-version = ['py39']
+include = '\.pyi?$'

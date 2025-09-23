@@ -57,12 +57,12 @@ class PortfolioPreference(BaseModel):
     initial_investment: float
 
 class AssetAllocation(BaseModel):
-    stocks_percentage: Optional[float]
-    bonds_percentage: Optional[float]
-    real_estate_percentage: Optional[float]
-    commodities_percentage: Optional[float]
-    cryptocurrency_percentage: Optional[float]
-    cash_percentage: Optional[float]
+    stocks_percentage: Optional[float] = None
+    bonds_percentage: Optional[float] = None
+    real_estate_percentage: Optional[float] = None
+    commodities_percentage: Optional[float] = None
+    cryptocurrency_percentage: Optional[float] = None
+    cash_percentage: Optional[float] = None
 
 class Region(BaseModel):
     region: str
