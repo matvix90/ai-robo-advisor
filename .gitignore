@@ -43,6 +43,9 @@ Thumbs.db
 # PDF files
 *.pdf
 
+# Utils files
+todo.txt
+
 # Database files (users will have their own local databases)
 *.db
 *.db-journal

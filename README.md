@@ -104,19 +104,7 @@ Contributions are what make the open-source community such an amazing place to l
 
 If you have a suggestion that would make this better, please fork the repo and create a pull request. You can also simply open an issue with the tag  `enhancement`.
 
-1.  Fork the Project
-2.  Create your Feature Branch (`git checkout -b feature/NewFeature`)
-3.  Commit your Changes (`git commit -m 'Add some NewFeature'`)
-4.  Push to the Branch (`git push origin feature/NewFeature`)
-5.  Open a Pull Request
-
-### Features to Add 
-1. Improve **agents** with new features and add more **llm** integrations
-2. Add ***Financial API*** that allow to manage historical data of ETFs quoted on European market.
-3. Improve **questionnaires** and **README.md** file.
-4. Add **Docker** integrations
-5. Add **Django** Backend and **React** Frontend to manage AI Workflow, Portfolio and Holdings.
-6. Add **tests** for main functionality
+See `CONTRIBUTING.md` for detailed information.
 
 ## License
 
