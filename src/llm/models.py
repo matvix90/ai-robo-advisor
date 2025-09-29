@@ -28,10 +28,12 @@ class AllModels(BaseModel):
     models: list[LLMModel]
 
 def load_models(available_models=AVAILABLE_MODELS) -> AllModels:
+    """Load and return all available LLM models."""
     models = [LLMModel(**model) for model in available_models]
     return AllModels(models=models)
 
 def get_llm_model(provider: ModelProvider, model_name: str, api_key=None) -> str:
+    """Initialize and return the LLM model based on provider and model name."""
     if provider == ModelProvider.ANTHROPIC:
         api_key = config("ANTHROPIC_API_KEY", default=None)
         if not api_key:
