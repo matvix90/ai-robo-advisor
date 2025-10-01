@@ -65,11 +65,29 @@ def create_workflow():
     graph_builder.add_edge("start", "goal_based_strategy")
     graph_builder.add_edge("goal_based_strategy", "create_portfolio")
     graph_builder.add_edge("create_portfolio", "run_analysis")
-    graph_builder.add_edge("run_analysis", END)
+
+    # === Conditional ===
+    def check_analysis(state: State):
+        retries = state["data"].get("retries", 0)
+        is_approved = state["data"]["analysis"].get("is_approved", False)
+
+        if not is_approved:
+            if retries < 1: 
+                state["data"]["retries"] = retries + 1
+                return "create_portfolio"
+            else:
+                return "end"
+        return "end"
+
+    graph_builder.add_conditional_edges(
+        "run_analysis",
+        check_analysis,
+        {"create_portfolio": "create_portfolio", "end": END},
+    )
 
     agent = graph_builder.compile()
-
     return agent
+
 
 def main():
     """Entry point for the ai-robo-advisor CLI application."""
