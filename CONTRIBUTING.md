@@ -6,6 +6,12 @@ Thank you for your interest in contributing to the AI Robo Advisor project! We w
 
 Contributions are what make the open-source community such an amazing place to learn, inspire, and create. Any contributions you make are **greatly appreciated**.
 
+For those attending Hacktoberfest, please subscribe to the channel at the following link:
+
+https://discord.gg/digitalocean
+
+All information and updates will be shared there!
+
 ### Ways to Contribute
 
 - **Bug Reports**: Report bugs and issues
