@@ -48,13 +48,74 @@ class InvestmentHorizon(str, Enum):
     LONG_TERM = "Long Term (7-15 years)"
     VERY_LONG_TERM = "Very Long Term (15+ years)"
 
+class InvestmentKnowledge(str, Enum):
+    NONE = "No knowledge - I'm just starting"
+    BASIC = "Basic - I understand stocks and bonds"
+    INTERMEDIATE = "Intermediate - I've invested before"
+    ADVANCED = "Advanced - I actively manage investments"
+    EXPERT = "Expert - I'm a finance professional"
+
+class IncomeLevel(str, Enum):
+    UNDER_30K = "Under $30,000"
+    FROM_30K_TO_60K = "$30,000 - $60,000"
+    FROM_60K_TO_100K = "$60,000 - $100,000"
+    FROM_100K_TO_150K = "$100,000 - $150,000"
+    FROM_150K_TO_250K = "$150,000 - $250,000"
+    OVER_250K = "Over $250,000"
+
+class InvestmentPurpose(str, Enum):
+    GROW_WEALTH = "Grow my wealth over time"
+    GENERATE_INCOME = "Generate regular income"
+    PRESERVE_CAPITAL = "Preserve my capital with minimal risk"
+    BALANCE_GROWTH_INCOME = "Balance between growth and income"
+    SPECIFIC_GOAL = "Save for a specific goal"
+
+class LiquidityNeed(str, Enum):
+    ANYTIME = "I might need it anytime"
+    WITHIN_1_YEAR = "Within 1 year"
+    FROM_1_TO_3_YEARS = "1-3 years"
+    FROM_3_TO_5_YEARS = "3-5 years"
+    OVER_5_YEARS = "Not for 5+ years"
+
+class MarketDownturnReaction(str, Enum):
+    SELL_ALL = "Sell everything immediately"
+    SELL_SOME = "Sell some to reduce risk"
+    HOLD = "Hold and wait for recovery"
+    BUY_MORE = "Buy more at lower prices"
+
+class InvestmentPriority(str, Enum):
+    STABILITY = "Stability and capital preservation"
+    INCOME = "Regular income"
+    BALANCED = "Balanced approach"
+    GROWTH = "Maximum growth potential"
+
 class PortfolioPreference(BaseModel):
-    goal: InvestmentGoal = Field(None, description="Investment goal")
-    risk_profile: RiskProfile = Field(None, description="Risk tolerance level")
-    investment_horizon: InvestmentHorizon = Field(None, description="Investment time horizon")
+    # Core investment fields
+    goal: InvestmentGoal = Field(..., description="Investment goal")
+    risk_profile: RiskProfile = Field(..., description="Risk tolerance level")
+    investment_horizon: InvestmentHorizon = Field(..., description="Investment time horizon")
     currency: Currency = Field(default=Currency.USD, description="Currency code")
     stock_exchange: StockExchange = Field(default=StockExchange.NYSE, description="Preferred stock exchange")
-    initial_investment: float
+    initial_investment: float = Field(..., gt=0, description="Initial investment amount")
+    
+    # Enhanced fields - Personal Information
+    age: int = Field(..., ge=18, le=100, description="User's age")
+    investment_knowledge: InvestmentKnowledge = Field(..., description="Level of investment knowledge")
+    income_level: IncomeLevel = Field(..., description="Annual income level")
+    
+    # Enhanced fields - Investment Goals & Timeline
+    investment_purpose: InvestmentPurpose = Field(..., description="Purpose of investment")
+    liquidity_need: LiquidityNeed = Field(..., description="When funds might be needed")
+    
+    # Enhanced fields - Financial Situation
+    has_emergency_fund: bool = Field(..., description="Whether user has 3-6 months emergency fund")
+    other_investments: float = Field(default=0.0, ge=0, description="Value of other investments")
+    monthly_contribution: float = Field(default=0.0, ge=0, description="Planned monthly contribution amount")
+    
+    # Enhanced fields - Risk Assessment
+    max_acceptable_loss: float = Field(..., ge=0, le=100, description="Maximum acceptable loss percentage in a year")
+    market_downturn_reaction: MarketDownturnReaction = Field(..., description="Reaction to market downturn")
+    investment_priority: InvestmentPriority = Field(..., description="Investment priority")
 
 class AssetAllocation(BaseModel):
     stocks_percentage: Optional[float] = None
