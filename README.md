@@ -28,6 +28,7 @@ This is the system workflow:
 ## Table of Contents
 - [Installation](#installation)
 - [How to Run](#how-to-run)
+- [Testing](#testing)
 - [Contributing](#contributing)
 - [License](#license)
 
@@ -97,6 +98,70 @@ run-advisor --show-reasoning
 
 #### Example Analysis Response
 ![Analysis Response](assets/analysis-response.png)
+
+## Testing
+
+This project includes a comprehensive test suite to ensure code quality and prevent regressions.
+
+### Running Tests
+
+#### Quick Start
+
+```bash
+# Run all tests
+python -m pytest tests/
+
+# Or use the test runner script
+./run_tests.sh
+```
+
+#### Run Specific Test Categories
+
+```bash
+# Run only unit tests
+python -m pytest tests/ -m unit
+
+# Run only integration tests
+python -m pytest tests/ -m integration
+
+# Run fast tests (exclude slow tests)
+python -m pytest tests/ -m "not slow"
+
+# Or using the test runner
+./run_tests.sh --unit
+./run_tests.sh --integration
+./run_tests.sh --fast
+```
+
+#### Run with Coverage
+
+```bash
+# Generate coverage report
+python -m pytest tests/ --cov=src --cov-report=html
+
+# View coverage in browser
+open htmlcov/index.html  # On Mac/Linux
+```
+
+### Test Structure
+
+- `tests/test_models.py` - Data model tests
+- `tests/test_llm.py` - LLM integration tests
+- `tests/test_utils.py` - Utility function tests
+- `tests/test_nodes.py` - Advisor node tests
+- `tests/test_workflow.py` - Workflow and graph tests
+- `tests/test_tools.py` - External API tool tests
+- `tests/test_questionnaires.py` - User interaction tests
+
+### Test Requirements
+
+Install test dependencies:
+
+```bash
+pip install -e ".[test]"
+```
+
+For detailed testing information, see [tests/README.md](tests/README.md).
 
 ## Contributing
 
