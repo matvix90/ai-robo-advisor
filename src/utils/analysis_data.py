@@ -19,8 +19,8 @@ def all_data(portfolio: Portfolio, benchmark_ticker: str) -> tuple[dict, dict, d
         TypeError: If portfolio is not a Portfolio instance.
     """
     
-    # Validate inputs
-    if not isinstance(portfolio, Portfolio):
+    # Validate inputs - check type name to avoid import path issues
+    if not hasattr(portfolio, '__class__') or type(portfolio).__name__ != 'Portfolio':
         raise TypeError("portfolio must be a Portfolio instance")
     
     if not benchmark_ticker or not isinstance(benchmark_ticker, str):

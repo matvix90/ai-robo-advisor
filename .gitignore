@@ -53,3 +53,23 @@ Thumbs.db
 *.db-shm
 *.sqlite
 *.sqlite3
+
+# Testing
+.pytest_cache/
+.coverage
+coverage.xml
+htmlcov/
+.tox/
+.nox/
+*.cover
+*.py,cover
+.hypothesis/
+.cache/
+nosetests.xml
+coverage/
+*.coveragerc
+
+# Test artifacts
+test-results/
+test-reports/
+.pytest/
