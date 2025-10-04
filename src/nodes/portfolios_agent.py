@@ -1,6 +1,11 @@
 from graph.state import State
 from data.models import PortfolioAgent
+from typing import Dict, Any
+import logging
+from utils.alphavantage import get_time_series_daily_adjusted, get_overview
 
+logger = logging.getLogger(__name__)
+logger.addHandler(logging.NullHandler())
 
 def create_portfolio(state:State) -> State:
     """
@@ -53,6 +58,41 @@ def create_portfolio(state:State) -> State:
 
     portfolio = response.portfolio
     portfolio.strategy = strategy
+
+ # Initialize market_data container
+    portfolio.market_data = {}  # type: Dict[str, Dict[str, Any]]
+
+    # Try to fetch overview + time series for each holding's symbol
+    holdings = getattr(portfolio, "holdings", []) or []
+    for h in holdings:
+        symbol = h.get("symbol")
+        if not symbol:
+            continue
+        try:
+            # Attempt to fetch overview and time series. Use compact by default (faster).
+            overview = get_overview(symbol, cache=True)
+            ts = get_time_series_daily_adjusted(symbol, outputsize="compact", cache=True)
+            portfolio.market_data[symbol] = {
+                "overview": overview.get("overview") if isinstance(overview, dict) else overview,
+                "time_series": ts.get("time_series") if isinstance(ts, dict) else ts,
+                "_raw_overview": overview.get("_raw") if isinstance(overview, dict) else overview,
+                "_raw_time_series": ts.get("_raw") if isinstance(ts, dict) else ts,
+            }
+            # Also attach quick fields onto the holding for convenience
+            # (non-destructive; only if keys not present)
+            if "name" not in h and overview and isinstance(overview, dict):
+                # overview may be the structure returned by the helper
+                ov = overview.get("overview") if "overview" in overview else overview
+                if isinstance(ov, dict):
+                    h.setdefault("name", ov.get("Name") or ov.get("name"))
+            # try to extract ISIN if available in overview
+            if "isin" not in h and overview and isinstance(overview, dict):
+                ov = overview.get("overview") if "overview" in overview else overview
+                if isinstance(ov, dict):
+                    h.setdefault("isin", ov.get("ISIN"))
+        except Exception as e:
+            logger.exception("Failed to fetch market data for %s: %s", symbol, e)
+            portfolio.market_data[symbol] = {"error": str(e)}
 
     state["data"]['portfolio'] = portfolio
 

@@ -1,5 +1,49 @@
 from graph.state import State
 from data.models import AnalysisAgent
+from typing import Optional, Dict, Any
+import logging
+
+from utils.alphavantage import get_overview
+
+logger = logging.getLogger(__name__)
+logger.addHandler(logging.NullHandler())
+
+
+def _extract_ter_from_overview(ov: Dict[str, Any]) -> Optional[float]:
+    """
+    Try common keys in overview data to extract an expense ratio (TER).
+    Returns decimal (e.g., 0.0025 for 0.25%) or None.
+    """
+    if not ov or not isinstance(ov, dict):
+        return None
+
+    # common possible keys
+    keys = [
+        "ExpenseRatio", "ExpenseRatioAnnual", "ExpenseRatioPercent", "TER",
+        "TotalExpenseRatio", "expenseRatio", "Expense Ratio", "annualExpenseRatio"
+    ]
+    for k in keys:
+        val = ov.get(k)
+        if not val:
+            # sometimes nested keys or different cases
+            continue
+        # parse things like "0.25%" or "0.0025" or "0.25"
+        try:
+            if isinstance(val, str) and "%" in val:
+                num = float(val.strip().replace("%", ""))
+                return num / 100.0
+            else:
+                num = float(val)
+                # Heuristic: if the value looks like '0.25' it's either 0.25% or 25%?
+                # We'll assume decimals near < 1 are already decimal fractions of 1 (i.e., 0.0025 or 0.25)
+                # If num > 1 and <= 100, treat as percent
+                if num > 1 and num <= 100:
+                    return num / 100.0
+                return num
+        except Exception:
+            continue
+    return None
+
 
 
 def analyze_ter(state:State) -> State:
