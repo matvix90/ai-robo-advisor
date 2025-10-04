@@ -2,6 +2,7 @@ from graph.state import State
 from data.models import AnalysisAgent
 from utils.metrics import analyze_portfolio
 from utils.analysis_data import all_data
+from tools.yf_data_provider import get_etf_data, compute_etf_metrics
 
 
 def analyze_performance(state:State) -> State:
@@ -15,20 +16,52 @@ def analyze_performance(state:State) -> State:
         
     benchmark_ticker = state["data"]["benchmark"]
 
-    # Initialize the analysis dictionary if it doesn't exist
-    if 'analysis' not in state['data']:
-        state['data']['analysis'] = {}
+    # # Initialize the analysis dictionary if it doesn't exist
+    # if 'analysis' not in state['data']:
+    #     state['data']['analysis'] = {}
 
-    portfolio_data, benchmark_data, weights = all_data(portfolio, benchmark_ticker)
+    # portfolio_data, benchmark_data, weights = all_data(portfolio, benchmark_ticker)
 
-    metrics = analyze_portfolio(
-        tickers_data=portfolio_data,
-        benchmark_data=benchmark_data,
-        weights=weights
-    )
+    # metrics = analyze_portfolio(
+    #     tickers_data=portfolio_data,
+    #     benchmark_data=benchmark_data,
+    #     weights=weights
+    # )
 
-    portfolio_metric = metrics["portfolio"]
-    benchmark_metric = metrics["benchmark"]
+    # portfolio_metric = metrics["portfolio"]
+    # benchmark_metric = metrics["benchmark"]
+
+
+    portfolio_metric = {}
+    benchmark_metric = {}
+
+    # Benchmark metrics
+    benchmark_data = get_etf_data(benchmark_ticker, period="5y")
+    benchmark_prices = benchmark_data.get("prices")
+    benchmark_metric = compute_etf_metrics(benchmark_prices) if benchmark_prices is not None else {}
+
+    # Portfolio metrics (weighted aggregation)
+    # For now: equal weighting across holdings if weights not defined
+    holding_metrics = []
+    for h in portfolio.holdings:
+        symbol = h.get("symbol") if isinstance(h, dict) else getattr(h, "symbol", None)
+        if not symbol:
+            continue
+        etf_data = get_etf_data(symbol, period="5y")
+        prices = etf_data.get("prices")
+        if prices is None:
+            continue
+        metrics = compute_etf_metrics(prices, benchmark_prices=benchmark_prices)
+        holding_metrics.append((symbol, metrics))
+
+    # Naive aggregation: average across holdings (better: weighted average by allocation)
+    if holding_metrics:
+        agg = {k: [] for k in holding_metrics[0][1].keys()}
+        for _, m in holding_metrics:
+            for k, v in m.items():
+                if v is not None:
+                    agg[k].append(v)
+        portfolio_metrics = {k: (sum(v) / len(v) if v else None) for k, v in agg.items()}
 
     prompt = f"""
     You are a financial data analyst AI specializing in portfolio performance analysis. 

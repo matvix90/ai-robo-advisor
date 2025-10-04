@@ -1,6 +1,6 @@
 from graph.state import State
 from data.models import AnalysisAgent
-
+from tools.yf_data_provider import get_etf_data
 
 def analyze_ter(state:State) -> State:
   
@@ -10,6 +10,25 @@ def analyze_ter(state:State) -> State:
     # Initialize the analysis dictionary if it doesn't exist
     if 'analysis' not in state['data']:
         state['data']['analysis'] = {}
+
+
+        #Enrich portfolio with TER values from Yahoo Finance ---
+    enriched_holdings = []
+    for h in portfolio.holdings:  # assuming each holding is a dict or object with a 'symbol'
+        symbol = h.get("symbol") if isinstance(h, dict) else getattr(h, "symbol", None)
+        ter = None
+        if symbol:
+            try:
+                etf_data = get_etf_data(symbol)
+                ter = etf_data.get("ter")
+            except Exception as e:
+                ter = None
+        # extend holding with TER info
+        enriched_holdings.append({
+            **h,  # keep existing fields
+            "ter": round(ter, 6) if ter is not None else None
+        })
+        
 
     prompt = f"""
     You are a financial data analyst AI specializing in ETF and mutual fund expense analysis.
