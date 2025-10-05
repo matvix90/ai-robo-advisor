@@ -8,7 +8,9 @@ from src.data.models import (
     Portfolio, Holding, Strategy, AssetAllocation, GeographicalDiversification,
     SectorDiversification, StockExchange, Region, Sector, Currency,
     RiskProfile, InvestmentGoal, InvestmentHorizon, PortfolioPreference,
-    InvestmentAgent, PortfolioAgent, AnalysisAgent, Status, AnalysisResponse
+    InvestmentAgent, PortfolioAgent, AnalysisAgent, Status, AnalysisResponse,
+    InvestmentKnowledge, IncomeLevel, InvestmentPurpose, LiquidityNeed,
+    MarketDownturnReaction, InvestmentPriority
 )
 
 
@@ -249,7 +251,22 @@ class TestPortfolioPreference:
             investment_horizon=InvestmentHorizon.VERY_LONG_TERM,
             currency=Currency.EUR,
             stock_exchange=StockExchange.EURONEXT,
-            initial_investment=50000.0
+            initial_investment=50000.0,
+            # Enhanced fields - Personal Information
+            age=45,
+            investment_knowledge=InvestmentKnowledge.BASIC,
+            income_level=IncomeLevel.FROM_100K_TO_150K,
+            # Enhanced fields - Investment Goals & Timeline
+            investment_purpose=InvestmentPurpose.GENERATE_INCOME,
+            liquidity_need=LiquidityNeed.FROM_3_TO_5_YEARS,
+            # Enhanced fields - Financial Situation
+            has_emergency_fund=True,
+            other_investments=15000.0,
+            monthly_contribution=1000.0,
+            # Enhanced fields - Risk Assessment
+            max_acceptable_loss=10.0,
+            market_downturn_reaction=MarketDownturnReaction.HOLD,
+            investment_priority=InvestmentPriority.STABILITY
         )
         assert pref.goal == InvestmentGoal.RETIREMENT
         assert pref.currency == Currency.EUR

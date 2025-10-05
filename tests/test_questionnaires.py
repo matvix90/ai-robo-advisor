@@ -11,7 +11,9 @@ from src.utils.questionnaires import (
 )
 from src.data.models import (
     InvestmentGoal, RiskProfile, InvestmentHorizon,
-    Currency, StockExchange, PortfolioPreference
+    Currency, StockExchange, PortfolioPreference,
+    InvestmentKnowledge, IncomeLevel, InvestmentPurpose,
+    LiquidityNeed, MarketDownturnReaction, InvestmentPriority
 )
 from src.llm.models import AllModels, LLMModel, ModelProvider
 
@@ -20,34 +22,60 @@ from src.llm.models import AllModels, LLMModel, ModelProvider
 # Get User Preferences Tests
 # ============================================================================
 
+def get_complete_mock_setup():
+    """Get complete mock setup for questionnaire tests."""
+    return {
+        'select_side_effect': [
+            InvestmentKnowledge.INTERMEDIATE,       # investment_knowledge
+            IncomeLevel.FROM_60K_TO_100K,          # income_level  
+            InvestmentGoal.WEALTH_BUILDING,        # goal
+            InvestmentPurpose.GROW_WEALTH,         # investment_purpose
+            InvestmentHorizon.LONG_TERM,           # investment_horizon
+            LiquidityNeed.OVER_5_YEARS,            # liquidity_need
+            MarketDownturnReaction.HOLD,           # market_downturn_reaction
+            InvestmentPriority.GROWTH,             # investment_priority
+            Currency.USD,                          # currency
+            StockExchange.NYSE                     # stock_exchange
+        ],
+        'text_side_effect': [
+            "35",      # age
+            "20.0",    # max_acceptable_loss
+            "5000",    # other_investments
+            "10000",   # initial_investment
+            "500"      # monthly_contribution
+        ],
+        'confirm_return': True  # has_emergency_fund
+    }
+
 @pytest.mark.unit
 class TestGetUserPreferences:
     """Tests for get_user_preferences function."""
 
-    @patch('src.utils.questionnaires.questionary.select')
     @patch('src.utils.questionnaires.questionary.text')
-    def test_get_user_preferences_complete(self, mock_text, mock_select):
+    @patch('src.utils.questionnaires.questionary.select')
+    @patch('src.utils.questionnaires.questionary.confirm')
+    def test_get_user_preferences_complete(self, mock_confirm, mock_select, mock_text):
         """Test getting complete user preferences."""
-        # Mock all questionary calls
-        mock_select.return_value.ask.side_effect = [
-            InvestmentGoal.WEALTH_BUILDING,
-            RiskProfile.MODERATE,
-            InvestmentHorizon.LONG_TERM,
-            Currency.USD,
-            StockExchange.NYSE
-        ]
-        mock_text.return_value.ask.return_value = "10000"
+        # Get standard mock setup
+        mock_setup = get_complete_mock_setup()
+        
+        mock_select.return_value.ask.side_effect = mock_setup['select_side_effect']
+        mock_text.return_value.ask.side_effect = mock_setup['text_side_effect']
+        mock_confirm.return_value.ask.return_value = mock_setup['confirm_return']
         
         result = get_user_preferences()
         
         # Check type using type() instead of isinstance for better compatibility
         assert type(result).__name__ == 'PortfolioPreference'
         assert result.goal == InvestmentGoal.WEALTH_BUILDING
-        assert result.risk_profile == RiskProfile.MODERATE
+        assert result.risk_profile.value  # Calculated risk profile
         assert result.investment_horizon == InvestmentHorizon.LONG_TERM
         assert result.currency == Currency.USD
         assert result.stock_exchange == StockExchange.NYSE
         assert result.initial_investment == 10000.0
+        assert result.age == 35
+        assert result.investment_knowledge == InvestmentKnowledge.INTERMEDIATE
+        assert result.income_level == IncomeLevel.FROM_60K_TO_100K
 
     @patch('src.utils.questionnaires.questionary.select')
     def test_get_user_preferences_keyboard_interrupt(self, mock_select):
@@ -57,18 +85,31 @@ class TestGetUserPreferences:
         with pytest.raises(SystemExit):
             get_user_preferences()
 
-    @patch('src.utils.questionnaires.questionary.select')
     @patch('src.utils.questionnaires.questionary.text')
-    def test_get_user_preferences_different_currency(self, mock_text, mock_select):
+    @patch('src.utils.questionnaires.questionary.select')
+    @patch('src.utils.questionnaires.questionary.confirm')
+    def test_get_user_preferences_different_currency(self, mock_confirm, mock_select, mock_text):
         """Test getting preferences with different currency."""
         mock_select.return_value.ask.side_effect = [
-            InvestmentGoal.RETIREMENT,
-            RiskProfile.CONSERVATIVE,
-            InvestmentHorizon.VERY_LONG_TERM,
-            Currency.EUR,
-            StockExchange.EURONEXT
+            InvestmentKnowledge.BASIC,              # investment_knowledge
+            IncomeLevel.FROM_100K_TO_150K,         # income_level
+            InvestmentGoal.RETIREMENT,             # goal
+            InvestmentPurpose.GENERATE_INCOME,     # investment_purpose
+            InvestmentHorizon.VERY_LONG_TERM,      # investment_horizon
+            LiquidityNeed.FROM_3_TO_5_YEARS,       # liquidity_need
+            MarketDownturnReaction.HOLD,           # market_downturn_reaction
+            InvestmentPriority.STABILITY,          # investment_priority
+            Currency.EUR,                          # currency
+            StockExchange.EURONEXT                 # stock_exchange
         ]
-        mock_text.return_value.ask.return_value = "50000"
+        mock_text.return_value.ask.side_effect = [
+            "45",      # age
+            "10.0",    # max_acceptable_loss
+            "15000",   # other_investments
+            "50000",   # initial_investment
+            "1000"     # monthly_contribution
+        ]
+        mock_confirm.return_value.ask.return_value = True  # has_emergency_fund
         
         result = get_user_preferences()
         
@@ -76,35 +117,43 @@ class TestGetUserPreferences:
         assert result.stock_exchange == StockExchange.EURONEXT
         assert result.initial_investment == 50000.0
 
-    @patch('src.utils.questionnaires.questionary.select')
     @patch('src.utils.questionnaires.questionary.text')
-    def test_get_user_preferences_amount_with_commas(self, mock_text, mock_select):
+    @patch('src.utils.questionnaires.questionary.select')
+    @patch('src.utils.questionnaires.questionary.confirm')
+    def test_get_user_preferences_amount_with_commas(self, mock_confirm, mock_select, mock_text):
         """Test handling of investment amount with commas."""
-        mock_select.return_value.ask.side_effect = [
-            InvestmentGoal.WEALTH_BUILDING,
-            RiskProfile.MODERATE,
-            InvestmentHorizon.LONG_TERM,
-            Currency.USD,
-            StockExchange.NYSE
+        mock_setup = get_complete_mock_setup()
+        mock_select.return_value.ask.side_effect = mock_setup['select_side_effect']
+        # Test amount with commas as initial investment input
+        mock_text.return_value.ask.side_effect = [
+            "35",       # age
+            "20.0",     # max_acceptable_loss
+            "5000",     # other_investments
+            "100,000.50",  # initial_investment (with commas)
+            "500"       # monthly_contribution
         ]
-        mock_text.return_value.ask.return_value = "100,000.50"
+        mock_confirm.return_value.ask.return_value = mock_setup['confirm_return']
         
         result = get_user_preferences()
         
         assert result.initial_investment == 100000.50
 
-    @patch('src.utils.questionnaires.questionary.select')
     @patch('src.utils.questionnaires.questionary.text')
-    def test_get_user_preferences_amount_with_currency_symbols(self, mock_text, mock_select):
+    @patch('src.utils.questionnaires.questionary.select')
+    @patch('src.utils.questionnaires.questionary.confirm')
+    def test_get_user_preferences_amount_with_currency_symbols(self, mock_confirm, mock_select, mock_text):
         """Test handling of investment amount with currency symbols."""
-        mock_select.return_value.ask.side_effect = [
-            InvestmentGoal.WEALTH_BUILDING,
-            RiskProfile.MODERATE,
-            InvestmentHorizon.LONG_TERM,
-            Currency.USD,
-            StockExchange.NYSE
+        mock_setup = get_complete_mock_setup()
+        mock_select.return_value.ask.side_effect = mock_setup['select_side_effect']
+        # Test amount with currency symbols as initial investment input
+        mock_text.return_value.ask.side_effect = [
+            "35",       # age
+            "20.0",     # max_acceptable_loss
+            "5000",     # other_investments
+            "$25,000",  # initial_investment (with currency symbol)
+            "500"       # monthly_contribution
         ]
-        mock_text.return_value.ask.return_value = "$25,000"
+        mock_confirm.return_value.ask.return_value = mock_setup['confirm_return']
         
         result = get_user_preferences()
         
@@ -177,35 +226,53 @@ class TestGetUserPreferences:
         with pytest.raises(SystemExit):
             get_user_preferences()
 
+    @patch('src.utils.questionnaires.questionary.confirm')
     @patch('src.utils.questionnaires.questionary.select')
     @patch('src.utils.questionnaires.questionary.text')
-    def test_get_user_preferences_euro_symbol(self, mock_text, mock_select):
+    def test_get_user_preferences_euro_symbol(self, mock_text, mock_select, mock_confirm):
         """Test handling of Euro currency symbol."""
-        mock_select.return_value.ask.side_effect = [
-            InvestmentGoal.WEALTH_BUILDING,
-            RiskProfile.MODERATE,
-            InvestmentHorizon.LONG_TERM,
-            Currency.EUR,
-            StockExchange.EURONEXT
+        mock_setup = get_complete_mock_setup()
+        # Use EUR currency in the select side effect
+        mock_setup_euro = mock_setup.copy()
+        mock_setup_euro['select_side_effect'] = mock_setup['select_side_effect'].copy()
+        mock_setup_euro['select_side_effect'][8] = Currency.EUR  # Update currency to EUR
+        
+        mock_select.return_value.ask.side_effect = mock_setup_euro['select_side_effect']
+        # Test amount with Euro symbol as initial investment input
+        mock_text.return_value.ask.side_effect = [
+            "35",       # age
+            "20.0",     # max_acceptable_loss
+            "5000",     # other_investments
+            "€15,000",  # initial_investment (with Euro symbol)
+            "500"       # monthly_contribution
         ]
-        mock_text.return_value.ask.return_value = "€15,000"
+        mock_confirm.return_value.ask.return_value = mock_setup['confirm_return']
         
         result = get_user_preferences()
         
         assert result.initial_investment == 15000.0
 
-    @patch('src.utils.questionnaires.questionary.select')
     @patch('src.utils.questionnaires.questionary.text')
-    def test_get_user_preferences_pound_symbol(self, mock_text, mock_select):
+    @patch('src.utils.questionnaires.questionary.select')
+    @patch('src.utils.questionnaires.questionary.confirm')
+    def test_get_user_preferences_pound_symbol(self, mock_confirm, mock_select, mock_text):
         """Test handling of Pound currency symbol."""
-        mock_select.return_value.ask.side_effect = [
-            InvestmentGoal.WEALTH_BUILDING,
-            RiskProfile.MODERATE,
-            InvestmentHorizon.LONG_TERM,
-            Currency.GBP,
-            StockExchange.LSE
+        mock_setup = get_complete_mock_setup()
+        # Use GBP currency in the select side effect
+        mock_setup_gbp = mock_setup.copy()
+        mock_setup_gbp['select_side_effect'] = mock_setup['select_side_effect'].copy()
+        mock_setup_gbp['select_side_effect'][8] = Currency.GBP  # Update currency to GBP
+        
+        mock_select.return_value.ask.side_effect = mock_setup_gbp['select_side_effect']
+        # Test amount with Pound symbol as initial investment input
+        mock_text.return_value.ask.side_effect = [
+            "35",       # age
+            "20.0",     # max_acceptable_loss
+            "5000",     # other_investments
+            "£20,000",  # initial_investment (with Pound symbol)
+            "500"       # monthly_contribution
         ]
-        mock_text.return_value.ask.return_value = "£20,000"
+        mock_confirm.return_value.ask.return_value = mock_setup['confirm_return']
         
         result = get_user_preferences()
         
@@ -516,19 +583,17 @@ class TestValidationFunctions:
 class TestQuestionnaireIntegration:
     """Integration tests for questionnaire flow."""
 
-    @patch('src.utils.questionnaires.questionary.select')
     @patch('src.utils.questionnaires.questionary.text')
-    def test_complete_questionnaire_flow(self, mock_text, mock_select):
+    @patch('src.utils.questionnaires.questionary.select')
+    @patch('src.utils.questionnaires.questionary.confirm')
+    def test_complete_questionnaire_flow(self, mock_confirm, mock_select, mock_text):
         """Test complete questionnaire flow from start to finish."""
-        # Setup mocks for all questions
-        mock_select.return_value.ask.side_effect = [
-            InvestmentGoal.WEALTH_BUILDING,
-            RiskProfile.MODERATE,
-            InvestmentHorizon.LONG_TERM,
-            Currency.USD,
-            StockExchange.NYSE
-        ]
-        mock_text.return_value.ask.return_value = "10000"
+        # Setup mocks for all questions using our helper
+        mock_setup = get_complete_mock_setup()
+        
+        mock_select.return_value.ask.side_effect = mock_setup['select_side_effect']
+        mock_text.return_value.ask.side_effect = mock_setup['text_side_effect']
+        mock_confirm.return_value.ask.return_value = mock_setup['confirm_return']
         
         preferences = get_user_preferences()
         
@@ -540,3 +605,6 @@ class TestQuestionnaireIntegration:
         assert preferences.currency is not None
         assert preferences.stock_exchange is not None
         assert preferences.initial_investment > 0
+        assert preferences.age > 0
+        assert preferences.investment_knowledge is not None
+        assert preferences.income_level is not None

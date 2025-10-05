@@ -12,7 +12,9 @@ from src.data.models import (
     GeographicalDiversification, SectorDiversification,
     StockExchange, Region, Sector, RiskProfile,
     InvestmentGoal, InvestmentHorizon, Currency,
-    PortfolioPreference, InvestmentAgent
+    PortfolioPreference, InvestmentAgent, InvestmentKnowledge,
+    IncomeLevel, InvestmentPurpose, LiquidityNeed,
+    MarketDownturnReaction, InvestmentPriority
 )
 
 
@@ -121,7 +123,22 @@ def sample_portfolio_preference():
         investment_horizon=InvestmentHorizon.LONG_TERM,
         currency=Currency.USD,
         stock_exchange=StockExchange.NYSE,
-        initial_investment=10000.0
+        initial_investment=10000.0,
+        # Enhanced fields - Personal Information
+        age=35,
+        investment_knowledge=InvestmentKnowledge.INTERMEDIATE,
+        income_level=IncomeLevel.FROM_60K_TO_100K,
+        # Enhanced fields - Investment Goals & Timeline
+        investment_purpose=InvestmentPurpose.GROW_WEALTH,
+        liquidity_need=LiquidityNeed.OVER_5_YEARS,
+        # Enhanced fields - Financial Situation
+        has_emergency_fund=True,
+        other_investments=5000.0,
+        monthly_contribution=500.0,
+        # Enhanced fields - Risk Assessment
+        max_acceptable_loss=20.0,
+        market_downturn_reaction=MarketDownturnReaction.HOLD,
+        investment_priority=InvestmentPriority.GROWTH
     )
 
 
