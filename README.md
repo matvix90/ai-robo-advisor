@@ -30,6 +30,7 @@ This is the system workflow:
 - [How to Run](#how-to-run)
 - [Testing](#testing)
 - [Contributing](#contributing)
+- [Contributors](#contributors)
 - [License](#license)
 
 ## 🚀 Getting Started
@@ -170,6 +171,12 @@ Contributions are what make the open-source community such an amazing place to l
 If you have a suggestion that would make this better, please fork the repo and create a pull request. You can also simply open an issue with the tag  `enhancement`.
 
 See `CONTRIBUTING.md` for detailed information.
+
+## Contributors
+
+Thanks to all the contributors who have helped with this project!
+
+[![Contributors](https://contrib.rocks/image?repo=matvix90/ai-robo-advisor)](https://github.com/matvix90/ai-robo-advisor/graphs/contributors)
 
 ## License
 
