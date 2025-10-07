@@ -38,17 +38,20 @@ def get_llm_model(provider: ModelProvider, model_name: str, api_key=None) -> str
         api_key = config("ANTHROPIC_API_KEY", default=None)
         if not api_key:
             raise ValueError("Missing ANTHROPIC_API_KEY in environment.")
-        model = f"{provider}:{model_name}"
+        model = f"{provider.value}:{model_name}"  
         return init_chat_model(model=model, api_key=api_key)
+
     elif provider == ModelProvider.GOOGLE:
         api_key = config("GOOGLE_API_KEY", default=None)
         if not api_key:
             raise ValueError("Missing GOOGLE_API_KEY in environment.")
-        model = f"{provider}:{model_name}"
+        model = f"{provider.value}:{model_name}"  
         return init_chat_model(model=model, api_key=api_key)
+
     elif provider == ModelProvider.OPENAI:
         api_key = config("OPENAI_API_KEY", default=None)
         if not api_key:
             raise ValueError("Missing OPENAI_API_KEY in environment.")
-        model = f"{provider}:{model_name}"
+        model = f"{provider.value}:{model_name}"  
         return init_chat_model(model=model, api_key=api_key)
+

@@ -1,122 +1,118 @@
+from rich.console import Console
+from rich.table import Table
+from rich.panel import Panel
+from rich.text import Text
+from rich import box
 from data.models import Portfolio, Strategy, AnalysisResponse
 
-from colorama import init, Fore, Style
-
-# Initialize colorama
-init(autoreset=True)
+console = Console()
 
 def print_portfolio(portfolio: Portfolio) -> None:
-    """Pretty print the portfolio details."""
     if not portfolio:
-        print(Fore.RED + "No portfolio to display" + Style.RESET_ALL)
+        console.print("[bold red]No portfolio to display[/bold red]")
         return
-        
-    print("\n" + Fore.CYAN + "="*50 + Style.RESET_ALL)
-    print(Fore.GREEN + "PORTFOLIO" + Style.RESET_ALL)
-    print(Fore.CYAN + "="*50 + Style.RESET_ALL)
-    
-    print(f"Portfolio Name: {Fore.WHITE}{portfolio.name}{Style.RESET_ALL}")
-    
+
+    console.print(Panel.fit("[bold cyan] PORTFOLIO DETAILS[/bold cyan]", style="cyan", expand=False))
+
+    console.print(f"[bold white]Portfolio Name:[/bold white] {portfolio.name}")
+
     if portfolio.holdings:
-        print("\n" + Fore.YELLOW + "Holdings:" + Style.RESET_ALL)
-        print(f"{'Symbol':<10} {'Name':<60} {'ISIN':<15} {'Asset Class':<15} {'Weight':<10}")
-        print(Fore.MAGENTA + "-" * 110 + Style.RESET_ALL)
-        
-        for holding in portfolio.holdings:
-            isin_display = holding.isin if holding.isin else "N/A"
-            print(f"{holding.symbol:<10} {holding.name:<60} {isin_display:<15} {holding.asset_class:<15} {holding.weight:<10.2f}%")
-        
-        # Calculate and display total weight
-        total_calculated = sum(holding.weight for holding in portfolio.holdings)
-        print(Fore.MAGENTA + "-" * 110 + Style.RESET_ALL)
-        print(f"{'TOTAL':<86} {'':<15} {total_calculated:<10.2f}%")
-        
-        # Validation check
-        if abs(total_calculated - 100.0) > 0.01:
-            print(Fore.YELLOW + f"⚠️  Warning: Portfolio weights sum to {total_calculated:.2f}%, not 100%" + Style.RESET_ALL)
+        table = Table(show_header=True, header_style="bold magenta", box=box.SIMPLE_HEAVY)
+        table.add_column("Symbol", style="yellow")
+        table.add_column("Name", style="white", overflow="fold")
+        table.add_column("ISIN", justify="center", style="cyan")
+        table.add_column("Asset Class", style="green")
+        table.add_column("Weight (%)", justify="right", style="bright_white")
+
+        for h in portfolio.holdings:
+            isin_display = h.isin if h.isin else "N/A"
+            table.add_row(h.symbol, h.name, isin_display, h.asset_class, f"{h.weight:.2f}")
+
+        total_weight = sum(h.weight for h in portfolio.holdings)
+        table.add_row("", "", "", "[bold yellow]TOTAL[/bold yellow]", f"[bold yellow]{total_weight:.2f}[/bold yellow]")
+
+        console.print(table)
+        if abs(total_weight - 100.0) > 0.01:
+            console.print(f":warning: [bold yellow]Weights sum to {total_weight:.2f}% (not 100%)![/bold yellow]")
     else:
-        print(Fore.RED + "No holdings found in portfolio" + Style.RESET_ALL)
+        console.print("[red]No holdings found in portfolio.[/red]")
+
 
 def print_strategy(strategy: Strategy) -> None:
-    """Pretty print the strategy details."""
     if not strategy:
-        print(Fore.RED + "No strategy to display" + Style.RESET_ALL)
+        console.print("[bold red]No strategy to display[/bold red]")
         return
-        
-    print("\n" + Fore.CYAN + "="*60 + Style.RESET_ALL)
-    print(Fore.GREEN + "INVESTMENT STRATEGY" + Style.RESET_ALL)
-    print(Fore.CYAN + "="*60 + Style.RESET_ALL)
-    
-    print(f"Strategy Name: {Fore.WHITE}{strategy.name}{Style.RESET_ALL}")
+
+    console.print(Panel.fit("[bold cyan] INVESTMENT STRATEGY[/bold cyan]", style="cyan", expand=False))
+    console.print(f"[bold white]Name:[/bold white] {strategy.name}")
     if strategy.description:
-        print(f"Description: {Fore.WHITE}{strategy.description}{Style.RESET_ALL}")
-    print(f"Stock Exchange: {Fore.WHITE}{strategy.stock_exchange.value}{Style.RESET_ALL}")
-    print(f"Risk Tolerance: {Fore.WHITE}{strategy.risk_tolerance}{Style.RESET_ALL}")
-    print(f"Time Horizon: {Fore.WHITE}{strategy.time_horizon}{Style.RESET_ALL}")
-    print(f"Expected Returns: {Fore.WHITE}{strategy.expected_returns}{Style.RESET_ALL}")
-    
-    # Asset Allocation
-    print("\n" + Fore.YELLOW + "Asset Allocation:" + Style.RESET_ALL)
-    allocation = strategy.asset_allocation
-    asset_items = [
-        ("Stocks", allocation.stocks_percentage),
-        ("Bonds", allocation.bonds_percentage),
-        ("Real Estate", allocation.real_estate_percentage),
-        ("Commodities", allocation.commodities_percentage),
-        ("Cryptocurrency", allocation.cryptocurrency_percentage),
-        ("Cash", allocation.cash_percentage)
-    ]
-    
-    for asset, percentage in asset_items:
-        if percentage is not None and percentage > 0:
-            print(f"  {asset:<15}: {Fore.WHITE}{percentage:>6.1f}%{Style.RESET_ALL}")
-    
+        console.print(f"[bold white]Description:[/bold white] {strategy.description}")
+    console.print(f"[bold white]Stock Exchange:[/bold white] {strategy.stock_exchange.value}")
+    console.print(f"[bold white]Risk Tolerance:[/bold white] {strategy.risk_tolerance}")
+    console.print(f"[bold white]Time Horizon:[/bold white] {strategy.time_horizon}")
+    console.print(f"[bold white]Expected Returns:[/bold white] {strategy.expected_returns}")
+
+    # Asset Allocation Table
+    console.print("\n[bold yellow]Asset Allocation[/bold yellow]")
+    alloc_table = Table(show_header=True, header_style="bold green", box=box.SQUARE)
+    alloc_table.add_column("Asset", style="cyan")
+    alloc_table.add_column("Weight (%)", justify="right", style="white")
+
+    alloc = strategy.asset_allocation
+    for asset, pct in [
+        ("Stocks", alloc.stocks_percentage),
+        ("Bonds", alloc.bonds_percentage),
+        ("Real Estate", alloc.real_estate_percentage),
+        ("Commodities", alloc.commodities_percentage),
+        ("Crypto", alloc.cryptocurrency_percentage),
+        ("Cash", alloc.cash_percentage)
+    ]:
+        if pct and pct > 0:
+            alloc_table.add_row(asset, f"{pct:.1f}")
+
+    console.print(alloc_table)
+
     # Geographical Diversification
     if strategy.geographical_diversification and strategy.geographical_diversification.regions:
-        print("\n" + Fore.YELLOW + "Geographical Diversification:" + Style.RESET_ALL)
-        for region in strategy.geographical_diversification.regions:
-            print(f"  {region.region:<20}: {Fore.WHITE}{region.weight:>6.1f}%{Style.RESET_ALL}")
-    
+        console.print("\n[bold yellow]Geographical Diversification[/bold yellow]")
+        geo_table = Table(show_header=True, box=box.MINIMAL_DOUBLE_HEAD)
+        geo_table.add_column("Region", style="cyan")
+        geo_table.add_column("Weight (%)", justify="right", style="white")
+        for r in strategy.geographical_diversification.regions:
+            geo_table.add_row(r.region, f"{r.weight:.1f}")
+        console.print(geo_table)
+
     # Sector Diversification
     if strategy.sector_diversification and strategy.sector_diversification.sectors:
-        print("\n" + Fore.YELLOW + "Sector Diversification:" + Style.RESET_ALL)
-        for sector in strategy.sector_diversification.sectors:
-            print(f"  {sector.sector:<20}: {Fore.WHITE}{sector.weight:>6.1f}%{Style.RESET_ALL}")
+        console.print("\n[bold yellow]Sector Diversification[/bold yellow]")
+        sec_table = Table(show_header=True, box=box.MINIMAL_DOUBLE_HEAD)
+        sec_table.add_column("Sector", style="cyan")
+        sec_table.add_column("Weight (%)", justify="right", style="white")
+        for s in strategy.sector_diversification.sectors:
+            sec_table.add_row(s.sector, f"{s.weight:.1f}")
+        console.print(sec_table)
+
 
 def print_analysis_response(analysis_response: AnalysisResponse) -> None:
-    """Pretty print the analysis response summary."""
     if not analysis_response:
-        print(Fore.RED + "No analysis response to display" + Style.RESET_ALL)
+        console.print("[bold red]No analysis response to display[/bold red]")
         return
-        
-    print("\n" + Fore.CYAN + "="*80 + Style.RESET_ALL)
-    print(Fore.GREEN + "PORTFOLIO ANALYSIS RESPONSE" + Style.RESET_ALL)
-    print(Fore.CYAN + "="*80 + Style.RESET_ALL)
-    
-    # Approval Status
-    if hasattr(analysis_response, 'is_approved') and analysis_response.is_approved is not None:
-        approval_color = Fore.GREEN if analysis_response.is_approved else Fore.RED
-        approval_text = "APPROVED" if analysis_response.is_approved else "REJECTED"
-        print(f"{'Portfolio Status':<20}: {approval_color}{approval_text}{Style.RESET_ALL}\n")
-    
-    # Strengths
-    if hasattr(analysis_response, 'strengths') and analysis_response.strengths:
-        print(f"{Fore.GREEN}STRENGTHS:{Style.RESET_ALL}")
-        print(f"{Fore.WHITE}{analysis_response.strengths}{Style.RESET_ALL}\n")
-    
-    # Weaknesses
-    if hasattr(analysis_response, 'weeknesses') and analysis_response.weeknesses:
-        print(f"{Fore.RED}WEAKNESSES:{Style.RESET_ALL}")
-        print(f"{Fore.WHITE}{analysis_response.weeknesses}{Style.RESET_ALL}\n")
-    
-    # Overall Assessment
-    if hasattr(analysis_response, 'overall_assessment') and analysis_response.overall_assessment:
-        print(f"{Fore.BLUE}OVERALL ASSESSMENT:{Style.RESET_ALL}")
-        print(f"{Fore.WHITE}{analysis_response.overall_assessment}{Style.RESET_ALL}\n")
-    
-    # Actionable Advice
-    if hasattr(analysis_response, 'advices') and analysis_response.advices:
-        print(f"{Fore.CYAN}ACTIONABLE ADVICE:{Style.RESET_ALL}")
-        print(f"{Fore.WHITE}{analysis_response.advices}{Style.RESET_ALL}\n")
-    
-    print(Fore.CYAN + "="*80 + Style.RESET_ALL)
+
+    console.print(Panel.fit("[bold cyan] PORTFOLIO ANALYSIS[/bold cyan]", style="cyan", expand=False))
+
+    if hasattr(analysis_response, 'is_approved'):
+        color = "green" if analysis_response.is_approved else "red"
+        status = " APPROVED" if analysis_response.is_approved else "❌ REJECTED"
+        console.print(f"[bold white]Portfolio Status:[/bold white] [{color}]{status}[/{color}]\n")
+
+    if getattr(analysis_response, "strengths", None):
+        console.print(Panel.fit(f" [bold green]STRENGTHS[/bold green]\n{analysis_response.strengths}", style="green"))
+
+    if getattr(analysis_response, "weeknesses", None):
+        console.print(Panel.fit(f" [bold red]WEAKNESSES[/bold red]\n{analysis_response.weeknesses}", style="red"))
+
+    if getattr(analysis_response, "overall_assessment", None):
+        console.print(Panel.fit(f" [bold blue]OVERALL ASSESSMENT[/bold blue]\n{analysis_response.overall_assessment}", style="blue"))
+
+    if getattr(analysis_response, "advices", None):
+        console.print(Panel.fit(f" [bold cyan]ACTIONABLE ADVICE[/bold cyan]\n{analysis_response.advices}", style="cyan"))
