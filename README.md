@@ -64,6 +64,7 @@ cp .env.example .env
 # Run the advisor
 run-advisor
 ```  
+
 <a id="installation"></a>
 ## 🚀 Installation
 
@@ -96,9 +97,7 @@ cp .env.example .env
 
 **Note:** Portfolios limited to 4 ETFs and 2 years of data (free Polygon.io constraints).
 
-
 <a id="usage"></a>
-
 ## 💼 Usage
 
 ### Command Line Interface
@@ -114,9 +113,7 @@ run-advisor --show-reasoning
 
 ![Analysis Response](assets/analysis-response.png)
 
-
 <a id="testing"></a>
-
 ## 🧪 Testing
 
 Comprehensive test suite for code quality and regression prevention.
@@ -143,7 +140,6 @@ pip install -e ".[test]"
 ```
 
 <a id="contributing"></a>
-
 ## 🤝 Contributing
 
 Contributions welcome! Please:
@@ -156,7 +152,6 @@ Contributions welcome! Please:
 See [`CONTRIBUTING.md`](CONTRIBUTING.md) for detailed guidelines.
 
 <a id="license"></a>
-
 ## 📄 License
 
 Distributed under the MIT License. See [`LICENSE`](LICENSE) for more information.
