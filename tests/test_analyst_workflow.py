@@ -4,6 +4,7 @@ Tests for the analyst workflow and graph.
 import pytest
 from unittest.mock import Mock, patch, MagicMock
 from io import StringIO
+from src.data.models import RiskProfile
 
 from src.nodes.analyst_agents.analysis_workflow import (
     start,
@@ -354,6 +355,7 @@ class TestIsApprovedNode:
     def test_is_approved_llm_prompt_structure(self, sample_state_with_portfolio, mock_llm):
         """Test that LLM prompt contains all necessary information."""
         # Setup state
+        sample_state_with_portfolio['data']['risk_profile'] = RiskProfile.MODERATE.value
         sample_state_with_portfolio['data']['analysis'] = {
             'expense_ratio': AnalysisAgent(
                 status=Status(key="is_cheaper", value=True),
@@ -406,9 +408,116 @@ class TestIsApprovedNode:
         assert "Performance reasoning" in prompt
         
         # Verify prompt contains confidence score
-        assert "3/4" in prompt  # 3 out of 4 passed
+        assert "2/4" in prompt  # 3 out of 4 passed
         
         # Verify prompt contains approval status
+        assert "APPROVED" in prompt
+
+
+    def test_is_approved_perf_pass_non_aggressive_disqualified(self, sample_state_with_portfolio, mock_llm):
+        """
+        Test case for when performance is passed but risk profile is non-aggressive
+        """
+        # Set risk profile to a non-aggressive category
+        sample_state_with_portfolio['data']['risk_profile'] = RiskProfile.MODERATE.value
+        
+        # Setup state to pass 1 other criteria and fail 2 others
+        # Total expected confidence without performance check = 1
+        sample_state_with_portfolio['data']['analysis'] = {
+            'expense_ratio': AnalysisAgent(
+                status=Status(key="is_cheaper", value=True), # PASS (+1)
+                reasoning="Low fees",
+                advices=[]
+            ),
+            'diversification': AnalysisAgent(
+                status=Status(key="is_diversified", value=False), # FAIL
+                reasoning="Poor diversification",
+                advices=[]
+            ),
+            'alignment': AnalysisAgent(
+                status=Status(key="is_aligned", value=False), # FAIL
+                reasoning="Misaligned",
+                advices=[]
+            ),
+            'performance': AnalysisAgent(
+                status=Status(key="is_performing", value=True), # Absolute PASS, but should be DISQUALIFIED
+                reasoning="Portfolio outperformed benchmark",
+                advices=[]
+            )
+        }
+        
+        # Mock LLM response for structure
+        analysis_response = AnalysisResponse(
+            is_approved=False,
+            strengths="Low fees only",
+            weeknesses="All others",
+            overall_assessment="Rejected due to misalignment",
+            advices="Correct risk exposure"
+        )
+        mock_llm.invoke.return_value = analysis_response
+        sample_state_with_portfolio['metadata']['analyst_llm_agent'] = mock_llm
+        
+        result = is_approved(sample_state_with_portfolio)
+        
+        # Confidence score should be 1 (+1 from expense_ratio), NOT 2.
+        assert result['data']['analysis']['is_approved'] is False
+        
+        # Verify prompt shows the correct confidence score (1/4)
+        mock_llm.invoke.assert_called_once()
+        call_args = mock_llm.invoke.call_args
+        prompt = call_args[0][0]
+        assert "OVERALL CONFIDENCE SCORE: 1/4" in prompt
+        assert "REJECTED" in prompt
+
+
+    def test_is_approved_perf_pass_aggressive_qualified(self, sample_state_with_portfolio, mock_llm):
+        """
+        Test case for when performance is passed but risk profile is non-aggressive
+        """
+        
+        sample_state_with_portfolio['data']['investment']['user_preferences'].risk_profile = RiskProfile.AGGRESSIVE
+
+        sample_state_with_portfolio['data']['analysis'] = {
+            'expense_ratio': AnalysisAgent(
+                status=Status(key="is_cheaper", value=True),
+                reasoning="Low fees",
+                advices=[]
+            ),
+            'diversification': AnalysisAgent(
+                status=Status(key="is_diversified", value=True),
+                reasoning="Well diversified",
+                advices=[]
+            ),
+            'alignment': AnalysisAgent(
+                status=Status(key="is_aligned", value=False),
+                reasoning="Misaligned",
+                advices=[]
+            ),
+            'performance': AnalysisAgent(
+                status=Status(key="is_performing", value=True),
+                reasoning="Portfolio outperformed benchmark",
+                advices=[]
+            )
+        }
+        
+        analysis_response = AnalysisResponse(
+            is_approved=True,
+            strengths="Fees, diversification, and performance met",
+            weeknesses="Alignment issue",
+            overall_assessment="Approved with minor issue",
+            advices="Realign strategy"
+        )
+        mock_llm.invoke.return_value = analysis_response
+        sample_state_with_portfolio['metadata']['analyst_llm_agent'] = mock_llm
+        
+        result = is_approved(sample_state_with_portfolio)
+        
+        assert result['data']['analysis']['is_approved'] is True
+        
+        mock_llm.invoke.assert_called_once()
+        call_args = mock_llm.invoke.call_args
+        prompt = call_args[0][0]
+        assert "OVERALL CONFIDENCE SCORE: 3/4" in prompt
         assert "APPROVED" in prompt
 
 
