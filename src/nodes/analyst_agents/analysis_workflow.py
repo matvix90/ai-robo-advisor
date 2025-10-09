@@ -25,9 +25,6 @@ def is_approved(state:State) -> State:
     risk_profile = state["data"]["investment"]['user_preferences'].risk_profile
     AGGRESSIVE_PROFILES = (RiskProfile.AGGRESSIVE, RiskProfile.ULTRA_AGGRESSIVE)
 
-    print(risk_profile)
-    print(AGGRESSIVE_PROFILES)
-
     performance_status = response["performance"].status.value
     if performance_status and risk_profile in AGGRESSIVE_PROFILES:
         confidence += 1
