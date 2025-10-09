@@ -414,39 +414,34 @@ class TestIsApprovedNode:
         assert "APPROVED" in prompt
 
 
-    def test_is_approved_perf_pass_non_aggressive_disqualified(self, sample_state_with_portfolio, mock_llm):
+    def test_is_approved_moderate(self, sample_state_with_portfolio, mock_llm):
         """
         Test case for when performance is passed but risk profile is non-aggressive
         """
-        # Set risk profile to a non-aggressive category
-        sample_state_with_portfolio['data']['risk_profile'] = RiskProfile.MODERATE.value
         
-        # Setup state to pass 1 other criteria and fail 2 others
-        # Total expected confidence without performance check = 1
         sample_state_with_portfolio['data']['analysis'] = {
             'expense_ratio': AnalysisAgent(
-                status=Status(key="is_cheaper", value=True), # PASS (+1)
+                status=Status(key="is_cheaper", value=True),
                 reasoning="Low fees",
                 advices=[]
             ),
             'diversification': AnalysisAgent(
-                status=Status(key="is_diversified", value=False), # FAIL
+                status=Status(key="is_diversified", value=False),
                 reasoning="Poor diversification",
                 advices=[]
             ),
             'alignment': AnalysisAgent(
-                status=Status(key="is_aligned", value=False), # FAIL
+                status=Status(key="is_aligned", value=False),
                 reasoning="Misaligned",
                 advices=[]
             ),
             'performance': AnalysisAgent(
-                status=Status(key="is_performing", value=True), # Absolute PASS, but should be DISQUALIFIED
+                status=Status(key="is_performing", value=True),
                 reasoning="Portfolio outperformed benchmark",
                 advices=[]
             )
         }
         
-        # Mock LLM response for structure
         analysis_response = AnalysisResponse(
             is_approved=False,
             strengths="Low fees only",
@@ -462,7 +457,6 @@ class TestIsApprovedNode:
         # Confidence score should be 1 (+1 from expense_ratio), NOT 2.
         assert result['data']['analysis']['is_approved'] is False
         
-        # Verify prompt shows the correct confidence score (1/4)
         mock_llm.invoke.assert_called_once()
         call_args = mock_llm.invoke.call_args
         prompt = call_args[0][0]
@@ -470,7 +464,7 @@ class TestIsApprovedNode:
         assert "REJECTED" in prompt
 
 
-    def test_is_approved_perf_pass_aggressive_qualified(self, sample_state_with_portfolio, mock_llm):
+    def test_is_approved_aggressive(self, sample_state_with_portfolio, mock_llm):
         """
         Test case for when performance is passed but risk profile is non-aggressive
         """
