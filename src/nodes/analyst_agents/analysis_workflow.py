@@ -2,6 +2,7 @@ from langgraph.graph import StateGraph, END
 
 from graph.state import State
 from data.models import AnalysisResponse
+from data.models import RiskProfile
 from . import alignment, diversification, fees, performance
 
 def start(state: State) -> State:
@@ -20,7 +21,15 @@ def is_approved(state:State) -> State:
         confidence += 1
     if response["alignment"].status.value:
         confidence += 1
-    if response["performance"].status.value:
+
+    risk_profile = state["data"]["investment"]['user_preferences'].risk_profile
+    AGGRESSIVE_PROFILES = (RiskProfile.AGGRESSIVE, RiskProfile.ULTRA_AGGRESSIVE)
+
+    print(risk_profile)
+    print(AGGRESSIVE_PROFILES)
+
+    performance_status = response["performance"].status.value
+    if performance_status and risk_profile in AGGRESSIVE_PROFILES:
         confidence += 1
 
     if confidence >= 2:
