@@ -43,6 +43,15 @@ else
     exit 1
 fi
 
+# Check if Docker daemon is running
+print_info "Checking Docker daemon..."
+if docker info >/dev/null 2>&1; then
+    print_success "Docker daemon is running"
+else
+    print_error "Docker daemon is not running. Please start Docker."
+    exit 1
+fi
+
 # Check if Docker Compose is available
 print_info "Checking Docker Compose..."
 if command -v docker-compose >/dev/null 2>&1 || docker compose version >/dev/null 2>&1; then
@@ -62,11 +71,53 @@ print_info "Checking environment configuration..."
 if [ -f .env ]; then
     print_success ".env file found"
     
-    # Check for required API keys
-    if grep -q "POLYGON_API_KEY=your-polygon-api-key" .env || grep -q "GOOGLE_API_KEY=your-google-api-key" .env; then
-        print_warning "Please update your API keys in .env file before running the application"
+    # Check for required API keys and validate them
+    print_info "Validating API key configuration..."
+    
+    # Check if API keys are still default values
+    has_default_keys=false
+    missing_keys=()
+    
+    if grep -q "POLYGON_API_KEY=your-polygon-api-key" .env 2>/dev/null; then
+        has_default_keys=true
+        missing_keys+=("POLYGON_API_KEY")
+    fi
+    if grep -q "GOOGLE_API_KEY=your-google-api-key" .env 2>/dev/null; then
+        has_default_keys=true
+        missing_keys+=("GOOGLE_API_KEY")
+    fi
+    if grep -q "OPENAI_API_KEY=your-openai-api-key" .env 2>/dev/null; then
+        has_default_keys=true
+        missing_keys+=("OPENAI_API_KEY")
+    fi
+    if grep -q "ANTHROPIC_API_KEY=your-anthropic-api-key" .env 2>/dev/null; then
+        has_default_keys=true
+        missing_keys+=("ANTHROPIC_API_KEY")
+    fi
+    
+    # Check if at least one API key is configured
+    configured_keys=()
+    if grep -q "^POLYGON_API_KEY=[^your-]" .env 2>/dev/null; then
+        configured_keys+=("POLYGON_API_KEY")
+    fi
+    if grep -q "^GOOGLE_API_KEY=[^your-]" .env 2>/dev/null; then
+        configured_keys+=("GOOGLE_API_KEY")
+    fi
+    if grep -q "^OPENAI_API_KEY=[^your-]" .env 2>/dev/null; then
+        configured_keys+=("OPENAI_API_KEY")
+    fi
+    if grep -q "^ANTHROPIC_API_KEY=[^your-]" .env 2>/dev/null; then
+        configured_keys+=("ANTHROPIC_API_KEY")
+    fi
+    
+    if [ ${#configured_keys[@]} -eq 0 ]; then
+        print_warning "No API keys configured. Please update your API keys in .env file before running the application"
+        print_info "Required: At least one LLM provider (Google/OpenAI/Anthropic) + Polygon API key"
     else
-        print_success "API keys appear to be configured"
+        print_success "API keys configured: ${configured_keys[*]}"
+        if [ ${#missing_keys[@]} -gt 0 ]; then
+            print_info "Optional API keys not set: ${missing_keys[*]}"
+        fi
     fi
 else
     print_warning ".env file not found. Creating from .env.example..."

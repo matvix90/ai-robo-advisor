@@ -66,7 +66,7 @@ run-advisor
 
 ## 🐳 Docker Setup
 
-The easiest way to run the AI Robo Advisor is using Docker. This ensures consistent behavior across all environments and eliminates dependency issues.
+The easiest way to run the AI Robo Advisor is using Docker. This ensures consistent behavior across all environments.
 
 ### Prerequisites for Docker
 - **Docker** and **Docker Compose** installed
@@ -83,135 +83,14 @@ cd ai-robo-advisor
 cp .env.example .env
 # Edit .env with your API keys
 
+# Validate setup (optional)
+./docker/validate-setup.sh
+
 # Start the application
 docker-compose up
 ```
 
-### Docker Usage Options
-
-#### 1. Development Mode (Default)
-```bash
-# Start with hot-reload for development
-docker-compose up
-
-# Start in background
-docker-compose up -d
-
-# View logs
-docker-compose logs -f
-```
-
-#### 2. Interactive Mode
-```bash
-# Start interactive shell for exploration
-docker-compose --profile interactive up ai-robo-advisor-interactive
-
-# Or use the helper script
-./docker/docker-helper.sh interactive
-```
-
-#### 3. Production Mode
-```bash
-# Start optimized production container
-docker-compose --profile production up ai-robo-advisor-prod
-
-# Or use the helper script
-./docker/docker-helper.sh up-prod
-```
-
-### Docker Helper Script
-
-Use the convenient helper script for common operations:
-
-```bash
-# Make executable (first time only)
-chmod +x docker/docker-helper.sh
-
-# Validate Docker setup
-./docker/validate-setup.sh
-
-# Available commands
-./docker/docker-helper.sh help
-
-# Common usage
-./docker/docker-helper.sh up              # Start development mode
-./docker/docker-helper.sh interactive     # Interactive shell
-./docker/docker-helper.sh test           # Run tests
-./docker/docker-helper.sh shell          # Open shell in running container
-./docker/docker-helper.sh down           # Stop containers
-./docker/docker-helper.sh clean          # Clean up everything
-```
-
-### Running the Application in Docker
-
-Once the container is running:
-
-```bash
-# In development mode (auto-starts the app)
-docker-compose up
-
-# In interactive mode
-docker-compose --profile interactive up ai-robo-advisor-interactive
-# Then inside the container:
-python -m main
-
-# Run with options
-python -m main --show-reasoning
-```
-
-### Docker File Structure
-
-```
-ai-robo-advisor/
-├── docker/
-│   ├── Dockerfile              # Multi-stage Dockerfile
-│   ├── docker-helper.sh        # Convenience script
-│   └── .env.docker            # Docker-specific env template
-├── docker-compose.yml         # Docker Compose configuration
-├── .dockerignore              # Build optimization
-└── .env.example               # Environment variables template
-```
-
-### Docker Troubleshooting
-
-```bash
-# View container logs
-docker-compose logs ai-robo-advisor
-
-# Check container status
-docker-compose ps
-
-# Rebuild containers (after code changes)
-docker-compose up --build
-
-# Clean restart
-docker-compose down && docker-compose up
-
-# Enter running container
-docker exec -it ai-robo-advisor-dev /bin/bash
-```
-
-### Docker Environment Variables
-
-The Docker setup handles these environment variables automatically:
-
-- `POLYGON_API_KEY` - Financial data API
-- `OPENAI_API_KEY` - OpenAI LLM access
-- `ANTHROPIC_API_KEY` - Anthropic Claude access
-- `GOOGLE_API_KEY` - Google Gemini access
-- `PYTHONPATH` - Python module resolution
-- `ENVIRONMENT` - Runtime environment mode
-
-### Docker vs Local Development
-
-| Feature | Docker | Local |
-|---------|--------|-------|
-| **Setup** | One command | Multiple steps |
-| **Dependencies** | Isolated | System-wide |
-| **Consistency** | ✅ Guaranteed | ❌ Varies by system |
-| **Performance** | Good | Native |
-| **Hot Reload** | ✅ Supported | ✅ Native |
-| **Debugging** | Interactive mode | Direct |
+For comprehensive Docker documentation, see [docker/README.md](docker/README.md).
 
 
 ## 🚀 Installation

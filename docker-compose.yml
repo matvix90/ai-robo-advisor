@@ -14,11 +14,11 @@ services:
       - ./pytest.ini:/app/pytest.ini:ro
       - ./run_tests.sh:/app/run_tests.sh:ro
     environment:
-      # Environment variables from .env file
-      - POLYGON_API_KEY=${POLYGON_API_KEY}
-      - OPENAI_API_KEY=${OPENAI_API_KEY}
-      - ANTHROPIC_API_KEY=${ANTHROPIC_API_KEY}
-      - GOOGLE_API_KEY=${GOOGLE_API_KEY}
+      # Environment variables from .env file with defaults
+      - POLYGON_API_KEY=${POLYGON_API_KEY:-}
+      - OPENAI_API_KEY=${OPENAI_API_KEY:-}
+      - ANTHROPIC_API_KEY=${ANTHROPIC_API_KEY:-}
+      - GOOGLE_API_KEY=${GOOGLE_API_KEY:-}
       # Development specific settings
       - PYTHONPATH=/app/src
       - ENVIRONMENT=development
@@ -82,7 +82,6 @@ services:
     env_file:
       - .env
     stdin_open: true
-    tty: true
     networks:
       - ai-robo-advisor-network
     restart: unless-stopped

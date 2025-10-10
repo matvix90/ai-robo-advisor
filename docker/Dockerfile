@@ -6,12 +6,14 @@ FROM python:3.11-slim as base
 ENV PYTHONDONTWRITEBYTECODE=1 \
     PYTHONUNBUFFERED=1 \
     PIP_NO_CACHE_DIR=1 \
-    PIP_DISABLE_PIP_VERSION_CHECK=1
+    PIP_DISABLE_PIP_VERSION_CHECK=1 \
+    PYTHONPATH=/app/src
 
 # Install system dependencies
 RUN apt-get update && apt-get install -y \
     gcc \
     g++ \
+    && apt-get clean \
     && rm -rf /var/lib/apt/lists/*
 
 # Create non-root user for security
@@ -83,6 +85,7 @@ RUN apt-get update && apt-get install -y \
     curl \
     nano \
     vim \
+    && apt-get clean \
     && rm -rf /var/lib/apt/lists/*
 
 USER appuser
