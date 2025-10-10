@@ -31,6 +31,7 @@ Welcome to your personal AI-powered investment assistant! This project democrati
 ## 📋 Table of Contents
 - [Prerequisites](#prerequisites)
 - [Quick Start](#quick-start)
+- [Docker Setup](#docker-setup)
 - [Installation](#installation)
 - [Usage](#usage)
 - [Testing](#testing)
