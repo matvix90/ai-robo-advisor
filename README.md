@@ -1,111 +1,165 @@
 # 🤖 AI Robo Advisor
 
-Welcome to your personal AI-powered investment assistant! This project aims to make professional-grade investment strategies, similar to those used by hedge funds, accessible to everyone through the power of AI.
+[![Python](https://img.shields.io/badge/python-3.10+-blue.svg)](https://www.python.org/downloads/)
+[![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
+[![Tests](https://img.shields.io/badge/tests-pytest-green.svg)](https://pytest.org/)
 
-This is the system workflow:
+Welcome to your personal AI-powered investment assistant! This project democratizes professional-grade investment strategies using AI, making hedge fund-level analysis accessible to everyone.
 
-1. Investment Agent: collects user preferences via questionnaire and produces a structured Strategy.
-
-2. Portfolio Agent: Translates the Strategy into a concrete ETF portfolio.
-
-3. Analyst Agents:
-    - Fees Agent: retrievesand analyze TER per holding.
-    - Diversification Agent: compares and analyze portfolio vs strategy across asset class, geography, sector.
-    - Alignment Agent: evaluates how holdings reflect risk tolerance, time horizon, expected returns embedded in the Strategy.
-    - Performance Agent: computes CAGR, Annualized Volatility, Sharpe, Max Drawdown, Alpha, Beta and analyze if portfolio is performant.
-    - Analysis Orchestrator: runs the above analyst agents and aggregates their outputs and provides a structured basis for downstream reporting.
+## 🎯 How It Works
 
 ![Workflow](assets/workflow.png)
 
-> **Disclaimer:** This project is for educational and research purposes only. The information provided should not be considered financial advice. Investing in financial markets involves risk, and you should consult with a qualified professional before making any investment decisions.
+**Multi-Agent System:**
+1. **Investment Agent** - Collects preferences via questionnaire and creates investment strategy
+2. **Portfolio Agent** - Translates strategy into concrete ETF portfolio (max 4 ETFs)
+3. **Analyst Agents** - Comprehensive analysis including:
+   - **Fees Agent** - Analyzes Total Expense Ratios (TER)
+   - **Diversification Agent** - Evaluates asset class, geography, and sector distribution
+   - **Alignment Agent** - Assesses risk tolerance and time horizon alignment
+   - **Performance Agent** - Calculates CAGR, volatility, Sharpe ratio, max drawdown, alpha & beta
+   - **Analysis Orchestrator** - Aggregates all analyses for final reporting
 
-## Key Features
+> **⚠️ Disclaimer:** This project is for educational and research purposes only. Not financial advice. Consult a qualified professional before making investment decisions.
 
-*   **AI-Driven Analysis:** Leverages AI to analyze market data and suggest investment strategies.
-*   **Portfolio Management:** Helps you build and track your investment portfolio.
-*   **Educational Tool:** A great way to learn about both Langgraph and AI applications in finance.
+## ✨ Key Features
 
-## Table of Contents
+- **AI-Driven Analysis** - Advanced market data analysis and strategy suggestions
+- **Portfolio Management** - Build and track ETF-based investment portfolios  
+- **Educational Tool** - Learn LangGraph and AI applications in finance
+
+## 📋 Table of Contents
+- [Prerequisites](#prerequisites)
+- [Quick Start](#quick-start)
 - [Installation](#installation)
-- [How to Run](#how-to-run)
+- [Usage](#usage)
+- [Testing](#testing)
 - [Contributing](#contributing)
 - [License](#license)
 
-## 🚀 Getting Started
+<a id="prerequisites"></a>
+## � Prerequisites
 
-Ready to run the project on your local machine? Follow these steps.
+- **Python 3.10+** 
+- **API Keys Required:**
+  - **OpenAI API Key** (or Google/Anthropic) - For LLM functionality
+  - **Polygon.io API Key** - For financial data (free tier available)
 
-Note: 
-- Portfolios are created with a maximum of 4 ETFs, and the analysis is performed using 2 years of historical data. These limitations are in place to work within the constraints of the free Polygon.io API key. If you have a paid license, you can modify the code to increase these limits.
-- The  
+<a id="quick-start"></a>
+## ⚡ Quick Start
 
-### Installation
-
-1.  **Clone the repository:**
-    ```bash
-    git clone https://github.com/matvix90/ai-robo-advisor.git
-    cd ai-robo-advisor
-    ```
-
-2.  **Create a virtual environment (recommended):**
-    ```bash
-    python3 -m venv venv
-    source venv/bin/activate
-    ```
-
-3.  **Install the dependencies:**
-    ```bash
-    pip install -e .
-    ```
-
-4. **Create a `.env` file for your API keys:**
-    ```bash
-    # Create .env file for your API keys (in the root directory)
-    cp .env.example .env
-    ```
-
-5.  **Set up API Keys:**
-    ```bash
-    # For running LLMs
-    OPENAI_API_KEY=your-openai-api-key
-
-    # For getting financial data to power the robo advisor
-    POLYGON_API_KEY=your-polygon-api-key
-    ```
-
-    **Important**: 
-    - You must set at least one LLM API key (e.g. OPENAI_API_KEY, GOOGLE_API_KEY or ANTHROPIC_API_KEY) for the robo advisor to work.
-    - You must set POLYGON_API_KEY for the robo advisor to work.
-
-## How to Run
-
-### ⌨️ Command Line Interface
-You can run the AI Robo Advisor directly via terminal. This approach offers more granular control and is useful for automation, scripting, and integration purposes.
-
-![Portfolio recommendation flow](assets/portfolio-response.png)
-
-#### Run the AI Robo Advisor
 ```bash
+# Clone and navigate
+git clone https://github.com/matvix90/ai-robo-advisor.git
+cd ai-robo-advisor
+
+# Setup environment
+python3 -m venv venv && source venv/bin/activate
+pip install -e .
+
+# Configure API keys
+cp .env.example .env
+# Edit .env with your API keys
+
+# Run the advisor
 run-advisor
+```  
+
+<a id="installation"></a>
+## 🚀 Installation
+
+### 1. Clone Repository
+```bash
+git clone https://github.com/matvix90/ai-robo-advisor.git
+cd ai-robo-advisor
 ```
 
-You can also specify a `--show-reasoning` flag to run the AI Robo Advisor seeing agents reasoning.
+### 2. Create Virtual Environment
+```bash
+python3 -m venv venv
+source venv/bin/activate  # On Windows: venv\Scripts\activate
+```
+
+### 3. Install Dependencies
+```bash
+pip install -e .
+```
+
+### 4. Configure API Keys
+```bash
+# Copy example environment file
+cp .env.example .env
+
+# Edit .env file with your keys:
+# OPENAI_API_KEY=your-openai-api-key
+# POLYGON_API_KEY=your-polygon-api-key
+```
+
+**Note:** Portfolios limited to 4 ETFs and 2 years of data (free Polygon.io constraints).
+
+<a id="usage"></a>
+## 💼 Usage
+
+### Command Line Interface
+![Portfolio Response](assets/portfolio-response.png)
 
 ```bash
+# Basic run
+run-advisor
+
+# Show AI reasoning process
 run-advisor --show-reasoning
 ```
 
-#### Example Analysis Response
 ![Analysis Response](assets/analysis-response.png)
 
-## Contributing
+<a id="testing"></a>
+## 🧪 Testing
 
-Contributions are what make the open-source community such an amazing place to learn, inspire, and create. Any contributions you make are **greatly appreciated**.
+Comprehensive test suite for code quality and regression prevention.
 
-If you have a suggestion that would make this better, please fork the repo and create a pull request. You can also simply open an issue with the tag  `enhancement`.
+### Quick Test Commands
+```bash
+# Run all tests
+python -m pytest tests/ 
+# OR
+./run_tests.sh
 
-See `CONTRIBUTING.md` for detailed information.
+# Run with coverage
+python -m pytest tests/ --cov=src --cov-report=html
 
-## License
+# Test categories
+python -m pytest tests/ -m unit      # Unit tests only
+python -m pytest tests/ -m integration  # Integration tests
+python -m pytest tests/ -m "not slow"   # Fast tests
+```
 
-This project is distributed under the MIT License. See `LICENSE.txt` for more information.
+### Test Dependencies
+```bash
+pip install -e ".[test]"
+```
+
+<a id="contributing"></a>
+## 🤝 Contributing
+
+Contributions welcome! Please:
+1. Fork the repository
+2. Create your feature branch (`git checkout -b feature/AmazingFeature`)
+3. Commit changes (`git commit -m 'Add AmazingFeature'`)
+4. Push to branch (`git push origin feature/AmazingFeature`)
+5. Open a Pull Request
+
+See [`CONTRIBUTING.md`](CONTRIBUTING.md) for detailed guidelines.
+
+<a id="license"></a>
+## 📄 License
+
+Distributed under the MIT License. See [`LICENSE`](LICENSE) for more information.
+
+## ❤️ Contributors
+
+[![Contributors](https://contrib.rocks/image?repo=matvix90/ai-robo-advisor)](https://github.com/matvix90/ai-robo-advisor/graphs/contributors)
+
+---
+
+**⭐ Star this repo if you find it helpful!**

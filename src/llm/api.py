@@ -34,4 +34,12 @@ AVAILABLE_MODELS = [
         "model_name": "gpt-4o-mini",
         "display": "GPT-4o Mini"
     },
+    {
+    "provider": "openai",
+    "model_name": "gpt-3.5-turbo",
+    "display": "GPT-3.5 Turbo"
+    },
+
+    # GROQ Models
+    {"provider": "groq", "model_name": "llama-3.3-70b-versatile", "display": "Llama 3.3 70B Versatile (via Groq)"},
 ]
