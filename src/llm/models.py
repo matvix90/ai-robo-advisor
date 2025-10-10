@@ -6,6 +6,12 @@ from decouple import config
 
 from .api import AVAILABLE_MODELS
 
+# Import init_chat_model at module level for easier testing
+try:
+    from langchain.chat_models import init_chat_model
+except ImportError:
+    init_chat_model = None
+
 
 class ModelProvider(str, Enum):
     """Enum for supported LLM providers"""
@@ -56,9 +62,7 @@ def get_llm_model(
         ValueError: If API key is missing or provider is unsupported
         ImportError: If required provider package is not installed
     """
-    try:
-        from langchain.chat_models import init_chat_model
-    except ImportError:
+    if init_chat_model is None:
         raise ImportError("langchain package is required. Install with: pip install langchain")
 
     if provider == ModelProvider.ANTHROPIC:
