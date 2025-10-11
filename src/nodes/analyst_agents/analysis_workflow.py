@@ -2,6 +2,7 @@ from langgraph.graph import StateGraph, END
 
 from graph.state import State
 from data.models import AnalysisResponse
+from utils.check_performance import check_performance
 from . import alignment, diversification, fees, performance
 
 def start(state: State) -> State:
@@ -20,7 +21,7 @@ def is_approved(state:State) -> State:
         confidence += 1
     if response["alignment"].status.value:
         confidence += 1
-    if response["performance"].status.value:
+    if check_performance(state):
         confidence += 1
 
     if confidence >= 2:
