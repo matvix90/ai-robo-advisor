@@ -37,6 +37,7 @@ Welcome to your personal AI-powered investment assistant! This project democrati
 - [Testing](#testing)
 - [Contributing](#contributing)
 - [License](#license)
+- [Docker Information](#docker-information)
 
 <a id="prerequisites"></a>
 ## � Prerequisites
@@ -139,6 +140,48 @@ python -m pytest tests/ -m "not slow"   # Fast tests
 ```bash
 pip install -e ".[test]"
 ```
+
+<a id="docker-information"></a>
+## 🚀 Docker Setup
+
+### Prerequisites
+- Docker and Docker Compose installed
+- Git repository cloned
+
+### 1. Initial Setup
+```bash
+# Navigate to project root
+cd ai-robo-advisor
+
+# Create environment file
+cp .env.example .env
+
+# Edit .env with your API keys
+nano .env  # or your preferred editor
+```
+
+### 2. Validate Setup
+```bash
+# Run validation script
+./docker/validate-setup.sh
+```
+
+### 3. Start Application
+```bash
+# Development mode (default)
+docker-compose up
+
+# Or use helper script
+./docker/docker-helper.sh up
+```
+
+### 4. Want to learn more?
+
+Visit <a href="./docker/README.md">The Docker README</a> for more Information, Including:
+- **Directory structure**
+- **The Docker Architecture**
+- **Available Commands**
+- **The Development workflow**
 
 <a id="contributing"></a>
 ## 🤝 Contributing
