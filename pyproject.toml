@@ -19,6 +19,7 @@ dependencies = [
     "colorama>=0.4.6,<1.0",
     "langchain>=0.3.27,<0.4",
     "langchain-google-genai>=2.1.12,<3.0",
+    "langchain-groq>=0.3.8,<0.4",
     "langgraph>=0.6.7,<0.7",
     "numpy>=2.2.0,<3.0",
     "pandas>=2.3.0,<3.0",

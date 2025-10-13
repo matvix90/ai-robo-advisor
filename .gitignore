@@ -26,6 +26,7 @@ env/
 
 # Environment Variables
 .env
+.env.docker
 
 # IDE
 .idea/
