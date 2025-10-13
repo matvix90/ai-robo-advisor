@@ -66,6 +66,7 @@ cp .env.example .env
 run-advisor
 ```  
 
+
 <a id="installation"></a>
 ## 🚀 Installation
 
@@ -97,6 +98,72 @@ cp .env.example .env
 ```
 
 **Note:** Portfolios limited to 4 ETFs and 2 years of data (free Polygon.io constraints).
+<a id="docker-setup"></a>
+## 🐳 Docker Setup
+
+This project provides a Docker setup to ensure a consistent, cross-platform development environment. It eliminates "works on my machine" issues and offers optimized builds for different use cases.
+
+
+
+1.  **Prerequisites**: Ensure you have Docker and Docker Compose installed.
+2.  **Initial Setup**: Navigate to the project's root directory and create the required environment file.
+    ```bash
+    cp .env.example .env
+    # Edit .env with your API keys
+    ```
+3.  **Validate Setup**: Run the validation script to verify everything is configured correctly.
+    ```bash
+    ./docker/validate-setup.sh
+    ```
+4.  **Start Application**:
+    ```bash
+    # Start development environment (with hot-reload)
+    docker-compose up
+    # Or use the helper script
+    ./docker/docker-helper.sh up
+    ```
+
+### 🔧 Docker Architecture
+
+The `Dockerfile` utilizes a multi-stage build approach for optimized images:
+
+- **Base Stage**: A slim Python 3.11 image with essential system dependencies.
+- **Dependencies Stage**: Installs the application's required Python packages.
+- **Development Stage**: Includes development tools and enables hot-reload for a smooth workflow.
+- **Production Stage**: An optimized build for deployment, excluding development dependencies.
+- **Interactive Stage**: An enhanced environment with extra tools like `curl` and `vim` for debugging and exploration.
+
+### 📋 Available Commands
+
+You can use `docker-compose` directly or the provided `docker-helper.sh` script for common operations.
+
+**Using Helper Script:**
+
+```bash
+# Make executable (first time only)
+chmod +x docker/docker-helper.sh
+
+./docker/docker-helper.sh up              # Start development
+./docker/docker-helper.sh interactive     # Interactive shell
+./docker/docker-helper.sh test            # Run tests
+./docker/docker-helper.sh down            # Stop containers
+./docker/docker-helper.sh help            # Show all commands
+Using Docker Compose Directly:
+
+Bash
+
+# Start in the background
+docker-compose up -d
+
+# Stop containers
+docker-compose down
+
+# Run tests
+docker-compose run --rm ai-robo-advisor pytest tests/
+
+# View logs
+docker-compose logs -f
+```
 
 <a id="usage"></a>
 ## 💼 Usage
