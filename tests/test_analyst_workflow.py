@@ -180,6 +180,7 @@ class TestIsApprovedNode:
     def test_is_approved_one_pass_rejected(self, sample_state_with_portfolio, mock_llm):
         """Test rejection when only 1 criterion passes."""
         # Setup state with only 1 passing analysis
+        sample_state_with_portfolio['data']['investment']['user_preferences'].risk_profile = RiskProfile.AGGRESSIVE
         sample_state_with_portfolio['data']['analysis'] = {
             'expense_ratio': AnalysisAgent(
                 status=Status(key="is_cheaper", value=True),
@@ -408,7 +409,7 @@ class TestIsApprovedNode:
         assert "Performance reasoning" in prompt
         
         # Verify prompt contains confidence score
-        assert "2/4" in prompt  # 3 out of 4 passed
+        assert "3/4" in prompt  # 3 out of 4 passed
         
         # Verify prompt contains approval status
         assert "APPROVED" in prompt
@@ -454,14 +455,14 @@ class TestIsApprovedNode:
         
         result = is_approved(sample_state_with_portfolio)
         
-        # Confidence score should be 1 (+1 from expense_ratio), NOT 2.
-        assert result['data']['analysis']['is_approved'] is False
+        # Confidence score should be 2 (+1 from expense_ratio, +1 from performance)
+        assert result['data']['analysis']['is_approved'] is True
         
         mock_llm.invoke.assert_called_once()
         call_args = mock_llm.invoke.call_args
         prompt = call_args[0][0]
-        assert "OVERALL CONFIDENCE SCORE: 1/4" in prompt
-        assert "REJECTED" in prompt
+        assert "OVERALL CONFIDENCE SCORE: 2/4" in prompt
+        assert "APPROVED" in prompt
 
 
     def test_is_approved_aggressive(self, sample_state_with_portfolio, mock_llm):

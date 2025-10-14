@@ -10,6 +10,6 @@ def check_performance(state:State):
     AGGRESSIVE_PROFILES = (RiskProfile.AGGRESSIVE, RiskProfile.ULTRA_AGGRESSIVE)
 
     performance_status = state["data"]["analysis"]["performance"].status.value
-    if performance_status and (risk_profile in AGGRESSIVE_PROFILES):
-        return True
-    return False
+    if risk_profile in AGGRESSIVE_PROFILES:
+        return performance_status
+    return True
