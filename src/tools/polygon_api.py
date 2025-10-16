@@ -12,6 +12,7 @@ logger = logging.getLogger(__name__)
 # Configuration
 DEFAULT_TIMEOUT = config("POLYGON_REQUEST_TIMEOUT", default=10, cast=int)
 DEFAULT_MAX_RETRIES = config("POLYGON_MAX_RETRIES", default=3, cast=int)
+TIMEZONE = pytz.timezone('US/Eastern')
 
 # Polygon.io integration
 try:
@@ -245,14 +246,14 @@ def history_to_dict(history: list) -> list[dict]:
 
     return aggs
 
-def get_today_date():
+def get_today_date(): 
     """
     Get today's date in 'YYYY-MM-DD' format.
     
     Returns:
         str: Today's date
     """
-    return datetime.now(pytz.timezone('US/Eastern')).strftime('%Y-%m-%d')
+    return datetime.now(TIMEZONE).strftime('%Y-%m-%d')
 
 def get_one_year_ago_date():
     """
@@ -261,7 +262,7 @@ def get_one_year_ago_date():
     Returns:
         str: Date one year ago
     """
-    one_year_ago = datetime.now(pytz.timezone('US/Eastern')) - timedelta(days=365)
+    one_year_ago = datetime.now(TIMEZONE) - timedelta(days=365)
     return one_year_ago.strftime('%Y-%m-%d')
 
 def get_two_year_ago_date():
@@ -271,5 +272,5 @@ def get_two_year_ago_date():
     Returns:
         str: Date two years ago
     """
-    two_years_ago = datetime.now(pytz.timezone('US/Eastern')) - timedelta(days=730)
+    two_years_ago = datetime.now(TIMEZONE) - timedelta(days=730)
     return two_years_ago.strftime('%Y-%m-%d')
