@@ -1,20 +1,14 @@
 # Multi-stage Dockerfile for AI Robo Advisor
 # Use Python 3.11 as base (compatible with >=3.10 requirement)
-FROM python:3.11-slim as base
+FROM python:3.11-slim AS base
 
 # Set environment variables
 ENV PYTHONDONTWRITEBYTECODE=1 \
     PYTHONUNBUFFERED=1 \
     PIP_NO_CACHE_DIR=1 \
     PIP_DISABLE_PIP_VERSION_CHECK=1 \
-    PYTHONPATH=/app/src
+    PYTHONPATH=/app:/app/src
 
-# Install system dependencies
-RUN apt-get update && apt-get install -y \
-    gcc \
-    g++ \
-    && apt-get clean \
-    && rm -rf /var/lib/apt/lists/*
 
 # Create non-root user for security
 RUN groupadd -r appuser && useradd -r -g appuser appuser
@@ -23,19 +17,22 @@ RUN groupadd -r appuser && useradd -r -g appuser appuser
 WORKDIR /app
 
 # ===== DEPENDENCIES STAGE =====
-FROM base as dependencies
+FROM base AS dependencies
 
 # Copy dependency files and source structure
 COPY pyproject.toml ./
 COPY README.md ./
 COPY src/ ./src/
 
-# Install dependencies
-RUN pip install --upgrade pip setuptools wheel && \
-    pip install .
+# Install dependencies (install and later remove build tools to minimize final image size)
+RUN apt-get update && apt-get install -y --no-install-recommends gcc g++ && \
+    pip install --upgrade pip setuptools wheel && \
+    pip install . && \
+    apt-get purge -y --auto-remove gcc g++ && \
+    apt-get clean && rm -rf /var/lib/apt/lists/*
 
 # ===== DEVELOPMENT STAGE =====
-FROM dependencies as development
+FROM dependencies AS development
 
 # Install development dependencies
 RUN pip install -e ".[dev,test]"
@@ -58,7 +55,7 @@ USER appuser
 CMD ["python", "-m", "main", "--help"]
 
 # ===== PRODUCTION STAGE =====
-FROM dependencies as production
+FROM dependencies AS production
 
 # Source code is already copied in dependencies stage
 # Just need to set up the user and environment
@@ -71,13 +68,13 @@ USER appuser
 
 # Health check (simple Python import test)
 HEALTHCHECK --interval=30s --timeout=10s --start-period=5s --retries=3 \
-    CMD python -c "import sys; sys.path.insert(0, '/app/src'); import main" || exit 1
+    CMD python -c "import main" || exit 1
 
 # Default command for production
 CMD ["python", "-m", "main"]
 
 # ===== INTERACTIVE STAGE =====
-FROM development as interactive
+FROM development AS interactive
 
 # Install additional tools for interactive use
 USER root

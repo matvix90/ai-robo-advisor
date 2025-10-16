@@ -48,10 +48,10 @@ services:
       # Mount .env for development
       - ./.env:/app/.env
     environment:
-      - POLYGON_API_KEY=${POLYGON_API_KEY}
-      - OPENAI_API_KEY=${OPENAI_API_KEY}
-      - ANTHROPIC_API_KEY=${ANTHROPIC_API_KEY}
-      - GOOGLE_API_KEY=${GOOGLE_API_KEY}
+      - POLYGON_API_KEY=${POLYGON_API_KEY:-}
+      - OPENAI_API_KEY=${OPENAI_API_KEY:-}
+      - ANTHROPIC_API_KEY=${ANTHROPIC_API_KEY:-}
+      - GOOGLE_API_KEY=${GOOGLE_API_KEY:-}
       - PYTHONPATH=/app/src
       - ENVIRONMENT=development
     env_file:
@@ -73,10 +73,10 @@ services:
       target: production
     container_name: ai-robo-advisor-prod
     environment:
-      - POLYGON_API_KEY=${POLYGON_API_KEY}
-      - OPENAI_API_KEY=${OPENAI_API_KEY}
-      - ANTHROPIC_API_KEY=${ANTHROPIC_API_KEY}
-      - GOOGLE_API_KEY=${GOOGLE_API_KEY}
+      - POLYGON_API_KEY=${POLYGON_API_KEY:-}
+      - OPENAI_API_KEY=${OPENAI_API_KEY:-}
+      - ANTHROPIC_API_KEY=${ANTHROPIC_API_KEY:-}
+      - GOOGLE_API_KEY=${GOOGLE_API_KEY:-}
       - PYTHONPATH=/app/src
       - ENVIRONMENT=production
     env_file:
