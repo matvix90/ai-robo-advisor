@@ -66,6 +66,7 @@ cp .env.example .env
 run-advisor
 ```  
 
+
 <a id="installation"></a>
 ## 🚀 Installation
 
@@ -97,6 +98,48 @@ cp .env.example .env
 ```
 
 **Note:** Portfolios limited to 4 ETFs and 2 years of data (free Polygon.io constraints).
+
+<a id="docker-setup"></a>
+## 🐳 Docker Setup
+
+Complete Docker environment for consistent, cross-platform development. Eliminates "works on my machine" issues with optimized multi-stage builds.
+
+### Quick Docker Start
+```bash
+# Setup
+cp .env.example .env
+# Edit .env with your API keys
+
+# Validate configuration
+./docker/validate-setup.sh
+
+# Start development environment
+docker-compose up
+# Or use helper script
+./docker/docker-helper.sh up
+```
+
+### Available Commands
+```bash
+# Development
+./docker/docker-helper.sh up              # Start with hot-reload
+./docker/docker-helper.sh interactive     # Interactive shell
+./docker/docker-helper.sh test           # Run tests
+./docker/docker-helper.sh down           # Stop containers
+
+# Direct Docker Compose
+docker-compose up -d                      # Background mode
+docker-compose logs -f                    # View logs
+docker-compose run --rm ai-robo-advisor pytest tests/
+```
+
+### Docker Architecture
+- **Multi-stage builds**: Base → Dependencies → Development/Production/Interactive
+- **Hot-reload**: Source code changes reflected instantly
+- **Optimized images**: Separate dev/prod configurations
+- **Security**: Non-root user, isolated environment
+
+📖 **[Complete Docker Guide](docker/README.md)** - Detailed setup, troubleshooting, and advanced usage.
 
 <a id="usage"></a>
 ## 💼 Usage
