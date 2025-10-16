@@ -205,5 +205,3 @@ Distributed under the MIT License. See [`LICENSE`](LICENSE) for more information
 [![Contributors](https://contrib.rocks/image?repo=matvix90/ai-robo-advisor)](https://github.com/matvix90/ai-robo-advisor/graphs/contributors)
 
 ---
-
-**⭐ Star this repo if you find it helpful!**
