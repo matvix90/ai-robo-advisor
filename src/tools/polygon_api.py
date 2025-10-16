@@ -3,14 +3,13 @@ from typing import List, Dict, Optional, Any, Callable
 from decouple import config
 import pytz
 from concurrent.futures import ThreadPoolExecutor, as_completed, TimeoutError as FutureTimeout
-import concurrent.futures
 import logging
 import time
 import random
 
 logger = logging.getLogger(__name__)
 
-# Configuration (can be overridden via environment variables)
+# Configuration
 DEFAULT_TIMEOUT = config("POLYGON_REQUEST_TIMEOUT", default=10, cast=int)
 DEFAULT_MAX_RETRIES = config("POLYGON_MAX_RETRIES", default=3, cast=int)
 
@@ -21,11 +20,9 @@ try:
     POLYGON_AVAILABLE = True
 
 except Exception:
-    # ImportError or missing package
     POLYGON_AVAILABLE = False
     print("Polygon.io client not available. Ensure 'polygon' package is installed and POLYGON_API_KEY is set.")
 
-# Holds the last seen rate-limit headers (if any) for observability
 LAST_RATE_LIMIT_HEADERS: Optional[Dict[str, Any]] = None
 
 
@@ -41,7 +38,6 @@ def _is_rate_limit_exception(exc: Exception) -> bool:
     others include the string '429' or 'rate limit' in their message. This helper
     tries a few heuristics so we can retry only on rate-limit responses.
     """
-    # Check for common numeric attributes
     for attr in ("status", "status_code", "statusCode", "code"):
         if hasattr(exc, attr):
             try:
@@ -62,7 +58,6 @@ def _extract_headers_from_exception(exc: Exception) -> Optional[Dict[str, Any]]:
 
     Returns None if not available.
     """
-    # Common places where an HTTP response or headers might be attached
     candidates = [
         getattr(exc, "response", None),
         getattr(exc, "res", None),
@@ -72,18 +67,15 @@ def _extract_headers_from_exception(exc: Exception) -> Optional[Dict[str, Any]]:
     for c in candidates:
         if c is None:
             continue
-        # If c has headers attribute (requests-like)
         headers = getattr(c, "headers", None)
         if headers:
             return dict(headers)
-        # Some clients keep headers in .headers or .getheaders
         try:
             if hasattr(c, "getheaders"):
                 return dict(c.getheaders())
         except Exception:
             pass
-
-    # Finally, check if exception itself has headers
+            
     if hasattr(exc, "headers"):
         try:
             return dict(getattr(exc, "headers"))
@@ -118,7 +110,6 @@ def _call_with_retries(
     backoff_base = 1.0
     last_exc: Optional[Exception] = None
 
-    # We'll run the blocking call inside a ThreadPool to enforce a timeout
     with ThreadPoolExecutor(max_workers=1) as executor:
         while attempt <= max_retries:
             attempt += 1
@@ -130,10 +121,8 @@ def _call_with_retries(
                 future.cancel()
                 last_exc = TimeoutError(f"Polygon request timed out after {timeout}s on attempt {attempt}")
                 logger.warning("Polygon request timed out (attempt %d/%d) after %ss", attempt, max_retries, timeout)
-                # do not treat timeout as rate-limit; retry up to max_retries
             except Exception as exc:
                 last_exc = exc
-                # Try to surface headers if present
                 headers = _extract_headers_from_exception(exc)
                 global LAST_RATE_LIMIT_HEADERS
                 if headers:
@@ -151,11 +140,9 @@ def _call_with_retries(
                     time.sleep(wait)
                     continue
 
-                # Not a rate-limit (or we've exhausted retries)
                 logger.exception("Polygon request failed on attempt %d: %s", attempt, exc)
                 raise
 
-        # If we exit loop without returning, raise last exception
         if last_exc:
             raise last_exc
 
@@ -218,8 +205,11 @@ def get_stock_history(symbol, timespan, start_date, end_date, timeout: Optional[
     client = RESTClient(POLYGON_API_KEY)
 
     def _call():
-        # Keep the interaction with the polygon client inside the callable so
-        # the wrapper can enforce timeouts and retries around it.
+        """
+        Keep the interaction with the polygon client inside the callable so
+        the wrapper can enforce timeouts and retries around it.
+        
+        """
         return client.get_aggs(symbol, 1, timespan, start_date, end_date, sort='asc', adjusted=True)
 
     try:
