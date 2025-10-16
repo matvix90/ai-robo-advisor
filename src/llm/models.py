@@ -101,31 +101,30 @@ def get_llm_model(
             **kwargs
         )
 
-    elif provider == ModelProvider.GROQ:
-        api_key = api_key or config("GROQ_API_KEY", default=None)
-        if not api_key:
-            raise ValueError("Missing GROQ_API_KEY in environment.")
-        
-        try:
-            # Direct import and use ChatGroq for better control
-            from langchain_groq import ChatGroq
-            print(f"✅ Using ChatGroq with model: {model_name}")
-            return ChatGroq(
-                groq_api_key=api_key,
-                model_name=model_name,
-                temperature=temperature,
-                **kwargs
-            )
-        except ImportError:
-            # Fallback to init_chat_model if ChatGroq not available
-            print("⚠️ Falling back to init_chat_model (langchain_groq not found)")
-            model = f"{provider.value}:{model_name}"
-            return init_chat_model(
-                model=model, 
-                api_key=api_key, 
-                temperature=temperature,
-                **kwargs
-            )
+elif provider == ModelProvider.GROQ:
+    api_key = api_key or config("GROQ_API_KEY", default=None)
+    if not api_key:
+        raise ValueError("Missing GROQ_API_KEY in environment.")
     
-    else:
-        raise ValueError(f"Unsupported provider: {provider}")
+    try:
+        from langchain_groq import ChatGroq
+        print(f"✅ Using ChatGroq with model: {model_name}")
+        return ChatGroq(
+            groq_api_key=api_key,
+            model_name=model_name,
+            temperature=temperature,
+            **kwargs
+        )
+    except ImportError:
+        print("⚠️ Falling back to init_chat_model (langchain_groq not found)")
+        model = f"{provider.value}:{model_name}"
+        return init_chat_model(
+            model=model, 
+            api_key=api_key, 
+            temperature=temperature,
+            **kwargs
+        )
+
+else:
+    raise ValueError(f"Unsupported provider: {provider}")
+

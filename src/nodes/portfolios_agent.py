@@ -4,13 +4,20 @@ from data.models import PortfolioAgent
 
 def create_portfolio(state:State) -> State:
     """
-    Create a diversified ETF-based portfolio based on the provided investment strategy.
+    Create or revise a diversified ETF-based portfolio based on the
+    provided investment strategy.
+
+    If present, consumes actionable feedback from the analyst workflow at
+    `state['data']['analysis']['portfolio_feedback']` to improve the
+    portfolio on revision cycles.
     """
     print("Creating portfolio based on investment strategy...\n")
 
     llm = state["metadata"]["portfolio_llm_agent"]
     strategy = state["data"]['investment']['strategy']
     analyst = state["data"]['investment']['analyst']
+    feedback = state.get("data", {}).get("analysis", {}).get("portfolio_feedback", "")
+    retries = state.get("data", {}).get("retries", 0)
 
     # Get user preferences if available (for enhanced prompting)
     user_preferences = state["data"]['investment'].get('user_preferences')
@@ -149,6 +156,19 @@ def create_portfolio(state:State) -> State:
             * Good trading volume for easy entry/exit
             * Proven track record (at least 3 years of history preferred)
         - **Limited Holdings**: The portfolio must contain a maximum of 4 ETFs{enhanced_constraints}"""
+
+    # If we have feedback from analysis or are on a revision pass,
+    # append a clear improvement brief to the prompt.
+    if feedback or retries > 0:
+        prompt = (
+            prompt
+            + "\n\nREVISION CONTEXT:" 
+            + f"\n- Revision pass: {retries}"
+            + ("\n- Apply the following improvements strictly:" if feedback else "")
+            + (f"\n{feedback}" if feedback else "")
+            + "\n- Preserve the stated strategy constraints while addressing the issues."
+            + "\n- Do not exceed 4 ETFs and keep weights summing to 100%."
+        )
 
     response = llm.with_structured_output(PortfolioAgent).invoke(prompt)
 

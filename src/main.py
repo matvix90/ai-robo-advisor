@@ -59,17 +59,95 @@ def create_workflow():
     graph_builder.add_node("start", start)
     graph_builder.add_node("goal_based_strategy", investment_strategy)
     graph_builder.add_node("create_portfolio", create_portfolio)
+    
+    # === Feedback Node ===
+    def prepare_portfolio_feedback(state: State) -> State:
+        """
+        Prepare actionable feedback for the portfolio creation step using
+        the results of the analyst workflow.
+
+        - Collects consolidated advice from the analysis summary and individual
+          analysis nodes (fees, diversification, alignment, performance).
+        - Stores a concise feedback string in `state['data']['analysis']['portfolio_feedback']`
+          to guide the next portfolio revision.
+
+        Returns the updated state.
+        """
+        analysis = state.get("data", {}).get("analysis", {})
+
+        # Start with the consolidated summary advice if present
+        consolidated = analysis.get("summary").advices if analysis.get("summary") else None
+
+        # Collect any per-dimension advices (lists)
+        per_dimension_advices = []
+        for key in ("expense_ratio", "diversification", "alignment", "performance"):
+            item = analysis.get(key)
+            if item and getattr(item, "advices", None):
+                per_dimension_advices.extend(item.advices)
+
+        # Build a final feedback text
+        lines = []
+        if per_dimension_advices:
+            lines.append("Specific improvements from analysis:")
+            lines.extend([f"- {advice}" for advice in per_dimension_advices])
+        if consolidated:
+            # The consolidated summary may already include a joined string
+            if lines:
+                lines.append("")
+            lines.append("Consolidated analyst recommendations:")
+            lines.append(str(consolidated))
+
+        feedback_text = "\n".join(lines) if lines else ""
+
+        # Store feedback to be consumed by the portfolio creator
+        state.setdefault("data", {}).setdefault("analysis", {})["portfolio_feedback"] = feedback_text
+
+        # Track iteration count for safety
+        retries = state.get("data", {}).get("retries", 0)
+        state["data"]["retries"] = retries
+
+        return state
+
+    graph_builder.add_node("prepare_feedback", prepare_portfolio_feedback)
     graph_builder.add_node("run_analysis", create_analyst_graph())
 
     graph_builder.add_edge(START, "start")
     graph_builder.add_edge("start", "goal_based_strategy")
     graph_builder.add_edge("goal_based_strategy", "create_portfolio")
     graph_builder.add_edge("create_portfolio", "run_analysis")
-    graph_builder.add_edge("run_analysis", END)
+
+    # === Conditional ===
+    def check_analysis(state: State):
+        """
+        Decide next step based on approval status and retry budget.
+
+        - If analysis is not approved and retries remain, route to `prepare_feedback`
+          so we can inform the next portfolio revision with concrete advice.
+        - Otherwise, end the workflow.
+        """
+        retries = state.get("data", {}).get("retries", 0)
+        is_approved = state.get("data", {}).get("analysis", {}).get("is_approved", False)
+
+        if not is_approved:
+            # Allow up to 2 revision cycles to avoid potential infinite loops
+            if retries < 2:
+                state.setdefault("data", {})["retries"] = retries + 1
+                return "prepare_feedback"
+            return "end"
+        return "end"
+
+    graph_builder.add_conditional_edges(
+        "run_analysis",
+        check_analysis,
+        {"prepare_feedback": "prepare_feedback", "end": END},
+    )
+
+    # After preparing feedback, try creating the portfolio again
+    graph_builder.add_edge("prepare_feedback", "create_portfolio")
 
     agent = graph_builder.compile()
-
     return agent
+
 
 def main():
     """Entry point for the ai-robo-advisor CLI application."""
