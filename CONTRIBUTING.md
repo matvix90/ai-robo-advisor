@@ -10,8 +10,7 @@ Thank you for your interest in contributing to the AI Robo Advisor project! We w
 - [Creating Quality Pull Requests](#-creating-quality-pull-requests)
 - [Code Standards](#-code-standards)
 - [Testing Guidelines](#-testing-guidelines)
-- [Documentation](#-documentation)
-- [Priority Features](#priority-features-to-work-on)
+- [Documentation Requirements](#-documentation-requirements)
 - [Security Guidelines](#-security-guidelines)
 - [Hacktoberfest Guidelines](#-hacktoberfest-guidelines)
 
