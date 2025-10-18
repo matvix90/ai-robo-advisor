@@ -12,8 +12,6 @@ please mention it here for transparency.
 ## ✅ Contributors Checklist
 Please make sure you have completed **all** of the following before submitting this PR:
 
-- [ ] I have created an issue for this change before making the PR.
-- [ ] I am **not** submitting a PR for an issue that is already assigned to someone else.
 - [ ] My PR closes the issue number: #_____
 - [ ] I have followed the repository's contribution guidelines and workflow.
 - [ ] I have tested my changes and verified they work as expected.
