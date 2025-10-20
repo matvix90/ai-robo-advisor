@@ -25,7 +25,7 @@ class StockExchange(str, Enum):
 
 # Benchmark Enums
 class Benchmarks(Enum):
-    SPX = ("SPX", "S&P 500 — 500 large-cap U.S. companies listed on NYSE and NASDAQ")
+    SPY = ("SPY", "S&P 500 — 500 large-cap U.S. companies listed on NYSE and NASDAQ")
     DJIA = ("DJI", "Dow Jones Industrial Average — 30 large U.S. blue-chip stocks")
     NYA = ("NYA", "NYSE Composite Index — all common stocks listed on the NYSE")
     COMP = ("COMP", "Nasdaq Composite Index (Polygon native index)")
