@@ -5,9 +5,11 @@ from colorama import Fore, Style
 from data.models import (
     PortfolioPreference, RiskProfile, InvestmentHorizon, InvestmentGoal, 
     Currency, StockExchange, InvestmentKnowledge, IncomeLevel, 
-    InvestmentPurpose, LiquidityNeed, MarketDownturnReaction, InvestmentPriority
+    InvestmentPurpose, LiquidityNeed, MarketDownturnReaction, InvestmentPriority,
+    Benchmarks
 )
 from llm.models import AllModels, LLMModel, ModelProvider
+
 
 # Simple style configuration
 STYLE = questionary.Style([
@@ -246,6 +248,15 @@ def get_user_preferences() -> PortfolioPreference:
         if stock_exchange is None:
             print(f"\n{Fore.RED}✗ Questionnaire cancelled{Style.RESET_ALL}")
             sys.exit(0)
+
+        benchmark = questionary.select(
+            "Select your preferred benchmark:",
+            choices=[questionary.Choice(f"{b.value[0]} - {b.value[1]}", value=b) for b in Benchmarks],
+            style=STYLE
+        ).ask()
+
+        if benchmark is None:
+            benchmark = Benchmarks.ACWI 
         
         print(f"\n{Fore.GREEN}✓ Portfolio preferences collected successfully!{Style.RESET_ALL}\n")
         
@@ -257,6 +268,7 @@ def get_user_preferences() -> PortfolioPreference:
             currency=currency,
             stock_exchange=stock_exchange,
             initial_investment=initial_investment_float,
+            benchmark=benchmark.value,  # Convert enum to tuple
             
             # Enhanced fields
             age=age,

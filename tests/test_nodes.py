@@ -11,7 +11,7 @@ from src.nodes.analyst_agents.performance import analyze_performance
 from src.nodes.analyst_agents.diversification import analyze_diversification
 from src.data.models import (
     InvestmentAgent, PortfolioAgent, AnalysisAgent, 
-    Status, Portfolio
+    Status, Portfolio, Benchmarks
 )
 
 
@@ -278,7 +278,7 @@ class TestPerformanceAnalysisNode:
         
         # Should set default benchmark
         assert 'benchmark' in result['data']
-        assert result['data']['benchmark'] == "ACWI"
+        assert result['data']['benchmark'] == Benchmarks.ACWI.value
 
     @patch('src.nodes.analyst_agents.performance.all_data')
     @patch('src.nodes.analyst_agents.performance.analyze_portfolio')

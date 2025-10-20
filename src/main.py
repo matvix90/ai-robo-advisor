@@ -10,6 +10,7 @@ from nodes.analyst_agents.analysis_workflow import create_analyst_graph
 from graph.state import State
 from utils.display import print_strategy, print_portfolio, print_analysis_response
 from utils.questionnaires import choose_llm_model, get_user_preferences
+from data.models import PortfolioPreference
 
 from llm.models import load_models, get_llm_model
 
@@ -21,7 +22,7 @@ def run_workflow(
         portfolio_llm_agent,
         analyst_llm_agent,
         analyst:str=None,
-        preferences:str=None
+        preferences:PortfolioPreference=None
     ):
     
     agent = create_workflow()
@@ -33,6 +34,7 @@ def run_workflow(
                     'analyst': analyst,
                     'user_preferences': preferences
                 },
+                'benchmark': preferences.benchmark
             },
             'metadata': 
             {'show_reasoning': show_reasoning,
