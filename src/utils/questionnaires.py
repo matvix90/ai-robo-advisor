@@ -251,7 +251,7 @@ def get_user_preferences() -> PortfolioPreference:
 
         benchmark = questionary.select(
             "Select your preferred benchmark:",
-            choices=[questionary.Choice(b.value[0], value=b) for b in Benchmarks],
+            choices=[questionary.Choice(f"{b.value[0]} - {b.value[1]}", value=b) for b in Benchmarks],
             style=STYLE
         ).ask()
 
