@@ -135,7 +135,7 @@ class TestGetUserPreferences:
             InvestmentPriority.STABILITY,          # investment_priority
             Currency.EUR,                          # currency
             StockExchange.EURONEXT,                # stock_exchange
-            Benchmarks.SPX                       # benchmark
+            Benchmarks.SPY                       # benchmark
         ]
         mock_text.return_value.ask.side_effect = [
             "45",      # age
@@ -148,7 +148,7 @@ class TestGetUserPreferences:
         
         result = get_user_preferences()
         
-        assert result.benchmark == Benchmarks.SPX
+        assert result.benchmark == Benchmarks.SPY
         assert result.stock_exchange == StockExchange.EURONEXT
         assert result.initial_investment == 50000.0
 
