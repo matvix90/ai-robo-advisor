@@ -127,9 +127,9 @@ class PortfolioPreference(BaseModel):
     max_acceptable_loss: float = Field(..., ge=0, le=100, description="Maximum acceptable loss percentage in a year")
     market_downturn_reaction: MarketDownturnReaction = Field(..., description="Reaction to market downturn")
     investment_priority: InvestmentPriority = Field(..., description="Investment priority")
-    benchmark: Benchmarks = Field(
-        default=Benchmarks.ACWI,
-        description="Selected benchmark (Enum member or custom ticker string)"
+    benchmark: tuple[str, str] = Field(
+        default=Benchmarks.ACWI.value,
+        description="Selected benchmark as (ticker, description) tuple"
     )
 
 class AssetAllocation(BaseModel):

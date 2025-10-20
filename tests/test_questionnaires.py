@@ -78,7 +78,7 @@ class TestGetUserPreferences:
         assert result.age == 35
         assert result.investment_knowledge == InvestmentKnowledge.INTERMEDIATE
         assert result.income_level == IncomeLevel.FROM_60K_TO_100K
-        assert result.benchmark == Benchmarks.ACWI
+        assert result.benchmark == Benchmarks.ACWI.value
     @patch('src.utils.questionnaires.questionary.select')
     def test_get_user_preferences_keyboard_interrupt(self, mock_select):
         """Test handling of keyboard interrupt."""
@@ -148,7 +148,7 @@ class TestGetUserPreferences:
         
         result = get_user_preferences()
         
-        assert result.benchmark == Benchmarks.SPY
+        assert result.benchmark == Benchmarks.SPY.value
         assert result.stock_exchange == StockExchange.EURONEXT
         assert result.initial_investment == 50000.0
 

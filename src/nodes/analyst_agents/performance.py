@@ -12,12 +12,13 @@ def analyze_performance(state:State) -> State:
     strategy = portfolio.strategy
 
     if state["data"].get("benchmark") is None:
-        state["data"]["benchmark"] = Benchmarks.ACWI
+        state["data"]["benchmark"] = Benchmarks.ACWI.value
         
     benchmark = state["data"]["benchmark"]
 
-    benchmark_ticker = benchmark.value[0]
-    benchmark_description = benchmark.value[1]
+    # benchmark is now a tuple (ticker, description)
+    benchmark_ticker = benchmark[0]
+    benchmark_description = benchmark[1]
 
     # Initialize the analysis dictionary if it doesn't exist
     if 'analysis' not in state['data']:

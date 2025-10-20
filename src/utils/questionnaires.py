@@ -2,7 +2,7 @@ import questionary
 import sys
 from colorama import Fore, Style
 
-from src.data.models import (
+from data.models import (
     PortfolioPreference, RiskProfile, InvestmentHorizon, InvestmentGoal, 
     Currency, StockExchange, InvestmentKnowledge, IncomeLevel, 
     InvestmentPurpose, LiquidityNeed, MarketDownturnReaction, InvestmentPriority,
@@ -268,7 +268,7 @@ def get_user_preferences() -> PortfolioPreference:
             currency=currency,
             stock_exchange=stock_exchange,
             initial_investment=initial_investment_float,
-            benchmark=benchmark,
+            benchmark=benchmark.value,  # Convert enum to tuple
             
             # Enhanced fields
             age=age,

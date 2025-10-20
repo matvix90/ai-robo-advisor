@@ -278,8 +278,7 @@ class TestPerformanceAnalysisNode:
         
         # Should set default benchmark
         assert 'benchmark' in result['data']
-        assert result['data']['benchmark'].name == Benchmarks.ACWI.name
-        assert result['data']['benchmark'].value == Benchmarks.ACWI.value
+        assert result['data']['benchmark'] == Benchmarks.ACWI.value
 
     @patch('src.nodes.analyst_agents.performance.all_data')
     @patch('src.nodes.analyst_agents.performance.analyze_portfolio')
