@@ -2,7 +2,7 @@ from graph.state import State
 from data.models import AnalysisAgent
 from utils.metrics import analyze_portfolio
 from utils.analysis_data import all_data
-from src.data.models import Benchmarks
+from data.models import Benchmarks
 
 
 def analyze_performance(state:State) -> State:
