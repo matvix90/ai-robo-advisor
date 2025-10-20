@@ -1,5 +1,5 @@
 from pydantic import BaseModel, Field
-from typing import Annotated, Optional, List
+from typing import Annotated, Optional, List, Union
 from enum import Enum
 
 # === Investment Models ===
@@ -22,6 +22,17 @@ class StockExchange(str, Enum):
     ASX = "ASX"             # Australian Securities Exchange
     SIX = "SIX"             # SIX Swiss Exchange
     BORSA_ITALIANA = "BORSA_ITALIANA"  # Borsa Italiana
+
+# Benchmark Enums
+class Benchmarks(Enum):
+    SPX = ("SPX", "S&P 500 — 500 large-cap U.S. companies listed on NYSE and NASDAQ")
+    DJIA = ("DJI", "Dow Jones Industrial Average — 30 large U.S. blue-chip stocks")
+    NYA = ("NYA", "NYSE Composite Index — all common stocks listed on the NYSE")
+    COMP = ("COMP", "Nasdaq Composite Index (Polygon native index)")
+    NDX  = ("NDX",  "Nasdaq-100 Index (Polygon native index)")
+    RUT  = ("RUT",  "Russell 2000 Index (Polygon native index)")
+    ACWI = ("ACWI", "MSCI ACWI — All Country World Index covering developed and emerging markets")
+
 
 class InvestmentGoal(str, Enum):
     RETIREMENT = "Retirement"
@@ -116,6 +127,10 @@ class PortfolioPreference(BaseModel):
     max_acceptable_loss: float = Field(..., ge=0, le=100, description="Maximum acceptable loss percentage in a year")
     market_downturn_reaction: MarketDownturnReaction = Field(..., description="Reaction to market downturn")
     investment_priority: InvestmentPriority = Field(..., description="Investment priority")
+    benchmark: Benchmarks = Field(
+        default=Benchmarks.ACWI,
+        description="Selected benchmark (Enum member or custom ticker string)"
+    )
 
 class AssetAllocation(BaseModel):
     stocks_percentage: Optional[float] = None

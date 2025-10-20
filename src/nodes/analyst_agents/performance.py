@@ -2,6 +2,7 @@ from graph.state import State
 from data.models import AnalysisAgent
 from utils.metrics import analyze_portfolio
 from utils.analysis_data import all_data
+from src.data.models import Benchmarks
 
 
 def analyze_performance(state:State) -> State:
@@ -11,9 +12,12 @@ def analyze_performance(state:State) -> State:
     strategy = portfolio.strategy
 
     if state["data"].get("benchmark") is None:
-        state["data"]["benchmark"] = "ACWI"
+        state["data"]["benchmark"] = Benchmarks.ACWI
         
-    benchmark_ticker = state["data"]["benchmark"]
+    benchmark = state["data"]["benchmark"]
+
+    benchmark_ticker = benchmark.value[0]
+    benchmark_description = benchmark.value[1]
 
     # Initialize the analysis dictionary if it doesn't exist
     if 'analysis' not in state['data']:
@@ -48,9 +52,11 @@ def analyze_performance(state:State) -> State:
     Alpha: {portfolio_metric['Alpha']}
     Beta: {portfolio_metric['Beta']}
 
-    ## BENCHMARK DATA (ACWI ETF)
+    ## BENCHMARK DATA: 
+    ### Benchmark being used - ({benchmark_ticker})
+    {benchmark_description}
 
-    ### BENCHMARK METRICS (ACWI ETF):
+    ### BENCHMARK METRICS for ({benchmark_ticker}):
     CAGR: {benchmark_metric['CAGR']}
     Annualized Volatility: {benchmark_metric['Annualized Volatility']}
     Sharpe Ratio: {benchmark_metric['Sharpe Ratio']}

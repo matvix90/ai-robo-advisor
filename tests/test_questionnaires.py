@@ -13,7 +13,8 @@ from src.data.models import (
     InvestmentGoal, RiskProfile, InvestmentHorizon,
     Currency, StockExchange, PortfolioPreference,
     InvestmentKnowledge, IncomeLevel, InvestmentPurpose,
-    LiquidityNeed, MarketDownturnReaction, InvestmentPriority
+    LiquidityNeed, MarketDownturnReaction, InvestmentPriority,
+    Benchmarks
 )
 from src.llm.models import AllModels, LLMModel, ModelProvider
 
@@ -35,7 +36,8 @@ def get_complete_mock_setup():
             MarketDownturnReaction.HOLD,           # market_downturn_reaction
             InvestmentPriority.GROWTH,             # investment_priority
             Currency.USD,                          # currency
-            StockExchange.NYSE                     # stock_exchange
+            StockExchange.NYSE,                    # stock_exchange
+            Benchmarks.ACWI                        # benchmark
         ],
         'text_side_effect': [
             "35",      # age
@@ -76,7 +78,7 @@ class TestGetUserPreferences:
         assert result.age == 35
         assert result.investment_knowledge == InvestmentKnowledge.INTERMEDIATE
         assert result.income_level == IncomeLevel.FROM_60K_TO_100K
-
+        assert result.benchmark == Benchmarks.ACWI
     @patch('src.utils.questionnaires.questionary.select')
     def test_get_user_preferences_keyboard_interrupt(self, mock_select):
         """Test handling of keyboard interrupt."""
@@ -100,7 +102,8 @@ class TestGetUserPreferences:
             MarketDownturnReaction.HOLD,           # market_downturn_reaction
             InvestmentPriority.STABILITY,          # investment_priority
             Currency.EUR,                          # currency
-            StockExchange.EURONEXT                 # stock_exchange
+            StockExchange.EURONEXT,                # stock_exchange
+            Benchmarks.ACWI                        # benchmark
         ]
         mock_text.return_value.ask.side_effect = [
             "45",      # age
@@ -114,6 +117,38 @@ class TestGetUserPreferences:
         result = get_user_preferences()
         
         assert result.currency == Currency.EUR
+        assert result.stock_exchange == StockExchange.EURONEXT
+        assert result.initial_investment == 50000.0
+    @patch('src.utils.questionnaires.questionary.text')
+    @patch('src.utils.questionnaires.questionary.select')
+    @patch('src.utils.questionnaires.questionary.confirm')
+    def test_get_user_preferences_different_benchmark(self, mock_confirm, mock_select, mock_text):
+        """Test getting preferences with different currency."""
+        mock_select.return_value.ask.side_effect = [
+            InvestmentKnowledge.BASIC,              # investment_knowledge
+            IncomeLevel.FROM_100K_TO_150K,         # income_level
+            InvestmentGoal.RETIREMENT,             # goal
+            InvestmentPurpose.GENERATE_INCOME,     # investment_purpose
+            InvestmentHorizon.VERY_LONG_TERM,      # investment_horizon
+            LiquidityNeed.FROM_3_TO_5_YEARS,       # liquidity_need
+            MarketDownturnReaction.HOLD,           # market_downturn_reaction
+            InvestmentPriority.STABILITY,          # investment_priority
+            Currency.EUR,                          # currency
+            StockExchange.EURONEXT,                # stock_exchange
+            Benchmarks.SPX                       # benchmark
+        ]
+        mock_text.return_value.ask.side_effect = [
+            "45",      # age
+            "10.0",    # max_acceptable_loss
+            "15000",   # other_investments
+            "50000",   # initial_investment
+            "1000"     # monthly_contribution
+        ]
+        mock_confirm.return_value.ask.return_value = True  # has_emergency_fund
+        
+        result = get_user_preferences()
+        
+        assert result.benchmark == Benchmarks.SPX
         assert result.stock_exchange == StockExchange.EURONEXT
         assert result.initial_investment == 50000.0
 
