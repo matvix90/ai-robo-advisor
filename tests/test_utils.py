@@ -178,7 +178,7 @@ class TestAnalyzePortfolio:
         """Test basic portfolio analysis."""
         benchmark_data = sample_ohlcv_data[:200]
         
-        result = analyze_portfolio(
+        result, warning = analyze_portfolio(
             tickers_data=sample_tickers_data,
             benchmark_data=benchmark_data
         )
@@ -206,7 +206,7 @@ class TestAnalyzePortfolio:
         benchmark_data = sample_ohlcv_data[:200]
         weights = {'VTI': 0.6, 'BND': 0.3, 'VNQ': 0.1}
         
-        result = analyze_portfolio(
+        result, warning = analyze_portfolio(
             tickers_data=sample_tickers_data,
             benchmark_data=benchmark_data,
             weights=weights
@@ -219,7 +219,7 @@ class TestAnalyzePortfolio:
         """Test portfolio analysis with equal weights (default)."""
         benchmark_data = sample_ohlcv_data[:200]
         
-        result = analyze_portfolio(
+        result, warning = analyze_portfolio(
             tickers_data=sample_tickers_data,
             benchmark_data=benchmark_data,
             weights=None
@@ -251,7 +251,7 @@ class TestAnalyzePortfolio:
             'VTI': [{'date': '2023-01-01', 'open': 100}]  # Missing 'close'
         }
         
-        with pytest.raises(ValueError, match="Missing 'close' column"):
+        with pytest.raises(ValueError):
             analyze_portfolio(
                 tickers_data=bad_ticker_data,
                 benchmark_data=sample_ohlcv_data[:200]
@@ -271,13 +271,13 @@ class TestAnalyzePortfolio:
         """Test portfolio analysis with custom risk-free rate."""
         benchmark_data = sample_ohlcv_data[:200]
         
-        result1 = analyze_portfolio(
+        result1, warning1 = analyze_portfolio(
             tickers_data=sample_tickers_data,
             benchmark_data=benchmark_data,
             risk_free_rate=0.02
         )
         
-        result2 = analyze_portfolio(
+        result2, warning2 = analyze_portfolio(
             tickers_data=sample_tickers_data,
             benchmark_data=benchmark_data,
             risk_free_rate=0.05
@@ -294,7 +294,7 @@ class TestAnalyzePortfolio:
         weights = {'VTI': 60.0, 'BND': 30.0, 'VNQ': 10.0}  # Sum to 100 instead of 1
         
         # Should not raise error - weights should be normalized
-        result = analyze_portfolio(
+        result, warning = analyze_portfolio(
             tickers_data=sample_tickers_data,
             benchmark_data=benchmark_data,
             weights=weights

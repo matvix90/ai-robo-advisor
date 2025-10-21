@@ -1,5 +1,5 @@
-from graph.state import State
-from data.models import AnalysisAgent
+from src.graph.state import State
+from src.data.models import AnalysisAgent
 
 
 def analyze_alignment(state:State) -> State:
