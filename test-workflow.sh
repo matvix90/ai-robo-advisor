@@ -32,12 +32,12 @@ echo ""
 echo "📅 **Period:** $(date -u -d '7 days ago' +%Y-%m-%d) to $(date -u +%Y-%m-%d)"
 echo ""
 
-# Get new issues created in the past week
-NEW_ISSUES=$(gh issue list --state all --created "$(date -u -d '7 days ago' +%Y-%m-%dT%H:%M:%SZ)..$(date -u +%Y-%m-%dT%H:%M:%SZ)" --json number --jq 'length' 2>/dev/null || echo "0")
+# Get new issues created in the past week (simplified approach)
+NEW_ISSUES=$(gh issue list --state all --json number,createdAt --jq '[.[] | select(.createdAt > "'$(date -u -d '7 days ago' +%Y-%m-%dT%H:%M:%SZ)'")] | length' 2>/dev/null || echo "0")
 echo "🆕 **New Issues:** $NEW_ISSUES"
 
-# Get closed issues in the past week
-CLOSED_ISSUES=$(gh issue list --state closed --updated "$(date -u -d '7 days ago' +%Y-%m-%dT%H:%M:%SZ)..$(date -u +%Y-%m-%dT%H:%M:%SZ)" --json number --jq 'length' 2>/dev/null || echo "0")
+# Get closed issues in the past week (simplified approach)
+CLOSED_ISSUES=$(gh issue list --state closed --json number,closedAt --jq '[.[] | select(.closedAt != null and .closedAt > "'$(date -u -d '7 days ago' +%Y-%m-%dT%H:%M:%SZ)'")] | length' 2>/dev/null || echo "0")
 echo "✅ **Closed Issues:** $CLOSED_ISSUES"
 
 echo ""
@@ -52,8 +52,8 @@ for label in "${LABELS[@]}"; do
     # Count open issues with this label
     OPEN_COUNT=$(gh issue list --state open --label "$label" --json number --jq 'length' 2>/dev/null || echo "0")
     
-    # Count closed issues with this label in the past week
-    CLOSED_COUNT=$(gh issue list --state closed --label "$label" --updated "$(date -u -d '7 days ago' +%Y-%m-%dT%H:%M:%SZ)..$(date -u +%Y-%m-%dT%H:%M:%SZ)" --json number --jq 'length' 2>/dev/null || echo "0")
+    # Count closed issues with this label (simplified - no date filter for now)
+    CLOSED_COUNT=$(gh issue list --state closed --label "$label" --json number --jq 'length' 2>/dev/null || echo "0")
     
     if [ "$OPEN_COUNT" -gt 0 ] || [ "$CLOSED_COUNT" -gt 0 ]; then
         echo "- **$label:** $OPEN_COUNT open, $CLOSED_COUNT closed this week"

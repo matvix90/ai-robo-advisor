@@ -39,12 +39,43 @@ jobs:
           echo "📅 **Period:** $START_DATE to $END_DATE"
           echo ""
           
-          # Get new issues created in the past week
-          NEW_ISSUES=$(gh issue list --state all --created "$START_DATE..$END_DATE" --json number,title,labels,state --jq 'length')
+          # Get all issues and filter by date using GitHub API
+          echo "Fetching issue data..."
+          
+          # Get new issues created in the past week using GitHub API
+          NEW_ISSUES=$(gh api graphql -f query='
+          query($owner: String!, $repo: String!, $since: DateTime!) {
+            repository(owner: $owner, name: $repo) {
+              issues(first: 100, filterBy: {since: $since}, orderBy: {field: CREATED_AT, direction: DESC}) {
+                totalCount
+                nodes {
+                  number
+                  title
+                  state
+                  createdAt
+                }
+              }
+            }
+          }' -f owner='${{ github.repository_owner }}' -f repo='${{ github.event.repository.name }}' -f since="$START_DATE" --jq '.data.repository.issues.totalCount')
+          
           echo "🆕 **New Issues:** $NEW_ISSUES"
           
           # Get closed issues in the past week
-          CLOSED_ISSUES=$(gh issue list --state closed --updated "$START_DATE..$END_DATE" --json number,title,labels,state --jq 'length')
+          CLOSED_ISSUES=$(gh api graphql -f query='
+          query($owner: String!, $repo: String!, $since: DateTime!) {
+            repository(owner: $owner, name: $repo) {
+              issues(first: 100, filterBy: {since: $since}, orderBy: {field: UPDATED_AT, direction: DESC}) {
+                nodes {
+                  number
+                  title
+                  state
+                  closedAt
+                  updatedAt
+                }
+              }
+            }
+          }' -f owner='${{ github.repository_owner }}' -f repo='${{ github.event.repository.name }}' -f since="$START_DATE" --jq '[.data.repository.issues.nodes[] | select(.state == "CLOSED" and .closedAt != null)] | length')
+          
           echo "✅ **Closed Issues:** $CLOSED_ISSUES"
           
           echo ""
@@ -59,11 +90,11 @@ jobs:
             # Count open issues with this label
             OPEN_COUNT=$(gh issue list --state open --label "$label" --json number --jq 'length')
             
-            # Count closed issues with this label in the past week
-            CLOSED_COUNT=$(gh issue list --state closed --label "$label" --updated "$START_DATE..$END_DATE" --json number --jq 'length')
+            # Count closed issues with this label (simplified - no date filter for now)
+            CLOSED_COUNT=$(gh issue list --state closed --label "$label" --json number --jq 'length')
             
             if [ "$OPEN_COUNT" -gt 0 ] || [ "$CLOSED_COUNT" -gt 0 ]; then
-              echo "- **$label:** $OPEN_COUNT open, $CLOSED_COUNT closed this week"
+              echo "- **$label:** $OPEN_COUNT open, $CLOSED_COUNT total closed"
             fi
           done
           
