@@ -30,53 +30,25 @@ jobs:
       - name: Generate Issue Summary
         id: summary
         run: |
-          # Set up date range for the past week
-          END_DATE=$(date -u +%Y-%m-%dT%H:%M:%SZ)
-          START_DATE=$(date -u -d '7 days ago' +%Y-%m-%dT%H:%M:%SZ)
-          
           echo "📊 **Weekly Issue Summary** - $(date -u +%Y-%m-%d)"
           echo ""
-          echo "📅 **Period:** $START_DATE to $END_DATE"
+          echo "📅 **Period:** $(date -u -d '7 days ago' +%Y-%m-%d) to $(date -u +%Y-%m-%d)"
           echo ""
           
-          # Get all issues and filter by date using GitHub API
+          # Get total issues count (simplified approach)
           echo "Fetching issue data..."
           
-          # Get new issues created in the past week using GitHub API
-          NEW_ISSUES=$(gh api graphql -f query='
-          query($owner: String!, $repo: String!, $since: DateTime!) {
-            repository(owner: $owner, name: $repo) {
-              issues(first: 100, filterBy: {since: $since}, orderBy: {field: CREATED_AT, direction: DESC}) {
-                totalCount
-                nodes {
-                  number
-                  title
-                  state
-                  createdAt
-                }
-              }
-            }
-          }' -f owner='${{ github.repository_owner }}' -f repo='${{ github.event.repository.name }}' -f since="$START_DATE" --jq '.data.repository.issues.totalCount')
+          # Get total open issues
+          OPEN_ISSUES=$(gh issue list --state open --json number --jq 'length')
+          echo "📋 **Open Issues:** $OPEN_ISSUES"
           
-          echo "🆕 **New Issues:** $NEW_ISSUES"
-          
-          # Get closed issues in the past week
-          CLOSED_ISSUES=$(gh api graphql -f query='
-          query($owner: String!, $repo: String!, $since: DateTime!) {
-            repository(owner: $owner, name: $repo) {
-              issues(first: 100, filterBy: {since: $since}, orderBy: {field: UPDATED_AT, direction: DESC}) {
-                nodes {
-                  number
-                  title
-                  state
-                  closedAt
-                  updatedAt
-                }
-              }
-            }
-          }' -f owner='${{ github.repository_owner }}' -f repo='${{ github.event.repository.name }}' -f since="$START_DATE" --jq '[.data.repository.issues.nodes[] | select(.state == "CLOSED" and .closedAt != null)] | length')
-          
+          # Get total closed issues
+          CLOSED_ISSUES=$(gh issue list --state closed --json number --jq 'length')
           echo "✅ **Closed Issues:** $CLOSED_ISSUES"
+          
+          # Get total issues
+          TOTAL_ISSUES=$(gh issue list --state all --json number --jq 'length')
+          echo "📊 **Total Issues:** $TOTAL_ISSUES"
           
           echo ""
           echo "🏷️ **Issues by Label:**"
@@ -90,27 +62,26 @@ jobs:
             # Count open issues with this label
             OPEN_COUNT=$(gh issue list --state open --label "$label" --json number --jq 'length')
             
-            # Count closed issues with this label (simplified - no date filter for now)
+            # Count closed issues with this label
             CLOSED_COUNT=$(gh issue list --state closed --label "$label" --json number --jq 'length')
             
             if [ "$OPEN_COUNT" -gt 0 ] || [ "$CLOSED_COUNT" -gt 0 ]; then
-              echo "- **$label:** $OPEN_COUNT open, $CLOSED_COUNT total closed"
+              echo "- **$label:** $OPEN_COUNT open, $CLOSED_COUNT closed"
             fi
           done
           
           echo ""
           echo "📈 **Summary:**"
-          echo "- Total new issues: $NEW_ISSUES"
-          echo "- Total closed issues: $CLOSED_ISSUES"
+          echo "- Open issues: $OPEN_ISSUES"
+          echo "- Closed issues: $CLOSED_ISSUES"
+          echo "- Total issues: $TOTAL_ISSUES"
           
-          # Calculate net change
-          NET_CHANGE=$((NEW_ISSUES - CLOSED_ISSUES))
-          if [ $NET_CHANGE -gt 0 ]; then
-            echo "- Net change: +$NET_CHANGE issues"
-          elif [ $NET_CHANGE -lt 0 ]; then
-            echo "- Net change: $NET_CHANGE issues (good progress!)"
+          # Calculate completion rate
+          if [ $TOTAL_ISSUES -gt 0 ]; then
+            COMPLETION_RATE=$(( (CLOSED_ISSUES * 100) / TOTAL_ISSUES ))
+            echo "- Completion rate: $COMPLETION_RATE%"
           else
-            echo "- Net change: 0 issues (balanced)"
+            echo "- Completion rate: N/A (no issues)"
           fi
           
           echo ""
@@ -128,43 +99,61 @@ jobs:
           # Create discussion title
           TITLE="📊 Weekly Issue Summary - $(date -u +%Y-%m-%d)"
           
-          # Get the summary content
-          SUMMARY_CONTENT=$(cat << 'EOF'
-          📊 **Weekly Issue Summary** - $(date -u +%Y-%m-%d)
+          # Get basic issue counts
+          OPEN_ISSUES=$(gh issue list --state open --json number --jq 'length')
+          CLOSED_ISSUES=$(gh issue list --state closed --json number --jq 'length')
+          TOTAL_ISSUES=$(gh issue list --state all --json number --jq 'length')
           
-          📅 **Period:** $(date -u -d '7 days ago' +%Y-%m-%d) to $(date -u +%Y-%m-%d)
-          
-          🆕 **New Issues:** $(gh issue list --state all --created "$(date -u -d '7 days ago' +%Y-%m-%dT%H:%M:%SZ)..$(date -u +%Y-%m-%dT%H:%M:%SZ)" --json number --jq 'length')
-          
-          ✅ **Closed Issues:** $(gh issue list --state closed --updated "$(date -u -d '7 days ago' +%Y-%m-%dT%H:%M:%SZ)..$(date -u +%Y-%m-%dT%H:%M:%SZ)" --json number --jq 'length')
-          
-          🏷️ **Issues by Label:**
-          EOF
-          )
-          
+          # Create summary content
+          SUMMARY_CONTENT="📊 **Weekly Issue Summary** - $(date -u +%Y-%m-%d)
+
+📅 **Period:** $(date -u -d '7 days ago' +%Y-%m-%d) to $(date -u +%Y-%m-%d)
+
+📋 **Open Issues:** $OPEN_ISSUES
+✅ **Closed Issues:** $CLOSED_ISSUES
+📊 **Total Issues:** $TOTAL_ISSUES
+
+🏷️ **Issues by Label:**"
+
           # Add label breakdown
           IFS=',' read -ra LABELS <<< "$LABELS_TO_INCLUDE"
           for label in "${LABELS[@]}"; do
             label=$(echo "$label" | xargs)
             OPEN_COUNT=$(gh issue list --state open --label "$label" --json number --jq 'length')
-            CLOSED_COUNT=$(gh issue list --state closed --label "$label" --updated "$(date -u -d '7 days ago' +%Y-%m-%dT%H:%M:%SZ)..$(date -u +%Y-%m-%dT%H:%M:%SZ)" --json number --jq 'length')
+            CLOSED_COUNT=$(gh issue list --state closed --label "$label" --json number --jq 'length')
             
             if [ "$OPEN_COUNT" -gt 0 ] || [ "$CLOSED_COUNT" -gt 0 ]; then
               SUMMARY_CONTENT="$SUMMARY_CONTENT
-          - **$label:** $OPEN_COUNT open, $CLOSED_COUNT closed this week"
+- **$label:** $OPEN_COUNT open, $CLOSED_COUNT closed"
             fi
           done
           
+          # Calculate completion rate
+          if [ $TOTAL_ISSUES -gt 0 ]; then
+            COMPLETION_RATE=$(( (CLOSED_ISSUES * 100) / TOTAL_ISSUES ))
+            SUMMARY_CONTENT="$SUMMARY_CONTENT
+
+📈 **Summary:**
+- Open issues: $OPEN_ISSUES
+- Closed issues: $CLOSED_ISSUES
+- Total issues: $TOTAL_ISSUES
+- Completion rate: $COMPLETION_RATE%"
+          else
+            SUMMARY_CONTENT="$SUMMARY_CONTENT
+
+📈 **Summary:**
+- Open issues: $OPEN_ISSUES
+- Closed issues: $CLOSED_ISSUES
+- Total issues: $TOTAL_ISSUES
+- Completion rate: N/A (no issues)"
+          fi
+          
           SUMMARY_CONTENT="$SUMMARY_CONTENT
-          
-          📈 **Summary:**
-          - Total new issues: $(gh issue list --state all --created "$(date -u -d '7 days ago' +%Y-%m-%dT%H:%M:%SZ)..$(date -u +%Y-%m-%dT%H:%M:%SZ)" --json number --jq 'length')
-          - Total closed issues: $(gh issue list --state closed --updated "$(date -u -d '7 days ago' +%Y-%m-%dT%H:%M:%SZ)..$(date -u +%Y-%m-%dT%H:%M:%SZ)" --json number --jq 'length')
-          
-          🔗 **View all issues:** [GitHub Issues](https://github.com/${{ github.repository }}/issues)
-          
-          ---
-          *This summary is automatically generated every Monday at 9 AM UTC*"
+
+🔗 **View all issues:** [GitHub Issues](https://github.com/${{ github.repository }}/issues)
+
+---
+*This summary is automatically generated every Monday at 9 AM UTC*"
           
           # Post to discussion
           gh api graphql -f query='
@@ -187,12 +176,19 @@ jobs:
 
       - name: Create Summary Artifact
         run: |
+          # Get basic issue counts
+          OPEN_ISSUES=$(gh issue list --state open --json number --jq 'length')
+          CLOSED_ISSUES=$(gh issue list --state closed --json number --jq 'length')
+          TOTAL_ISSUES=$(gh issue list --state all --json number --jq 'length')
+          
+          # Create markdown file
           echo "📊 Weekly Issue Summary - $(date -u +%Y-%m-%d)" > issue-summary.md
           echo "" >> issue-summary.md
           echo "📅 Period: $(date -u -d '7 days ago' +%Y-%m-%d) to $(date -u +%Y-%m-%d)" >> issue-summary.md
           echo "" >> issue-summary.md
-          echo "🆕 New Issues: $(gh issue list --state all --created "$(date -u -d '7 days ago' +%Y-%m-%dT%H:%M:%SZ)..$(date -u +%Y-%m-%dT%H:%M:%SZ)" --json number --jq 'length')" >> issue-summary.md
-          echo "✅ Closed Issues: $(gh issue list --state closed --updated "$(date -u -d '7 days ago' +%Y-%m-%dT%H:%M:%SZ)..$(date -u +%Y-%m-%dT%H:%M:%SZ)" --json number --jq 'length')" >> issue-summary.md
+          echo "📋 Open Issues: $OPEN_ISSUES" >> issue-summary.md
+          echo "✅ Closed Issues: $CLOSED_ISSUES" >> issue-summary.md
+          echo "📊 Total Issues: $TOTAL_ISSUES" >> issue-summary.md
           echo "" >> issue-summary.md
           echo "🏷️ Issues by Label:" >> issue-summary.md
           
@@ -200,15 +196,26 @@ jobs:
           for label in "${LABELS[@]}"; do
             label=$(echo "$label" | xargs)
             OPEN_COUNT=$(gh issue list --state open --label "$label" --json number --jq 'length')
-            CLOSED_COUNT=$(gh issue list --state closed --label "$label" --updated "$(date -u -d '7 days ago' +%Y-%m-%dT%H:%M:%SZ)..$(date -u +%Y-%m-%dT%H:%M:%SZ)" --json number --jq 'length')
+            CLOSED_COUNT=$(gh issue list --state closed --label "$label" --json number --jq 'length')
             
             if [ "$OPEN_COUNT" -gt 0 ] || [ "$CLOSED_COUNT" -gt 0 ]; then
-              echo "- **$label:** $OPEN_COUNT open, $CLOSED_COUNT closed this week" >> issue-summary.md
+              echo "- **$label:** $OPEN_COUNT open, $CLOSED_COUNT closed" >> issue-summary.md
             fi
           done
           
+          # Add completion rate
+          if [ $TOTAL_ISSUES -gt 0 ]; then
+            COMPLETION_RATE=$(( (CLOSED_ISSUES * 100) / TOTAL_ISSUES ))
+            echo "" >> issue-summary.md
+            echo "📈 Summary:" >> issue-summary.md
+            echo "- Completion rate: $COMPLETION_RATE%" >> issue-summary.md
+          fi
+          
           echo "" >> issue-summary.md
           echo "🔗 View all issues: https://github.com/${{ github.repository }}/issues" >> issue-summary.md
+          echo "" >> issue-summary.md
+          echo "---" >> issue-summary.md
+          echo "*This summary is automatically generated every Monday at 9 AM UTC*" >> issue-summary.md
           
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
