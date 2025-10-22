@@ -1,0 +1,190 @@
+name: Weekly Issue Summary
+
+on:
+  schedule:
+    # Run every Monday at 9 AM UTC
+    - cron: '0 9 * * 1'
+  workflow_dispatch: # Allow manual triggering
+
+env:
+  # Configurable labels to include in summary (based on GitHub samples reference)
+  LABELS_TO_INCLUDE: 'bug,help wanted,triage,enhancement,question,documentation'
+  # Destination for posting summary (discussion or slack)
+  POST_TO_DISCUSSION: 'true'
+  DISCUSSION_CATEGORY: 'General'
+
+jobs:
+  generate-summary:
+    runs-on: ubuntu-latest
+    permissions:
+      issues: read
+      discussions: write
+      contents: read
+    
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Generate Issue Summary
+        id: summary
+        run: |
+          # Set up date range for the past week
+          END_DATE=$(date -u +%Y-%m-%dT%H:%M:%SZ)
+          START_DATE=$(date -u -d '7 days ago' +%Y-%m-%dT%H:%M:%SZ)
+          
+          echo "📊 **Weekly Issue Summary** - $(date -u +%Y-%m-%d)"
+          echo ""
+          echo "📅 **Period:** $START_DATE to $END_DATE"
+          echo ""
+          
+          # Get new issues created in the past week
+          NEW_ISSUES=$(gh issue list --state all --created "$START_DATE..$END_DATE" --json number,title,labels,state --jq 'length')
+          echo "🆕 **New Issues:** $NEW_ISSUES"
+          
+          # Get closed issues in the past week
+          CLOSED_ISSUES=$(gh issue list --state closed --updated "$START_DATE..$END_DATE" --json number,title,labels,state --jq 'length')
+          echo "✅ **Closed Issues:** $CLOSED_ISSUES"
+          
+          echo ""
+          echo "🏷️ **Issues by Label:**"
+          
+          # Split labels and process each
+          IFS=',' read -ra LABELS <<< "$LABELS_TO_INCLUDE"
+          for label in "${LABELS[@]}"; do
+            # Trim whitespace
+            label=$(echo "$label" | xargs)
+            
+            # Count open issues with this label
+            OPEN_COUNT=$(gh issue list --state open --label "$label" --json number --jq 'length')
+            
+            # Count closed issues with this label in the past week
+            CLOSED_COUNT=$(gh issue list --state closed --label "$label" --updated "$START_DATE..$END_DATE" --json number --jq 'length')
+            
+            if [ "$OPEN_COUNT" -gt 0 ] || [ "$CLOSED_COUNT" -gt 0 ]; then
+              echo "- **$label:** $OPEN_COUNT open, $CLOSED_COUNT closed this week"
+            fi
+          done
+          
+          echo ""
+          echo "📈 **Summary:**"
+          echo "- Total new issues: $NEW_ISSUES"
+          echo "- Total closed issues: $CLOSED_ISSUES"
+          
+          # Calculate net change
+          NET_CHANGE=$((NEW_ISSUES - CLOSED_ISSUES))
+          if [ $NET_CHANGE -gt 0 ]; then
+            echo "- Net change: +$NET_CHANGE issues"
+          elif [ $NET_CHANGE -lt 0 ]; then
+            echo "- Net change: $NET_CHANGE issues (good progress!)"
+          else
+            echo "- Net change: 0 issues (balanced)"
+          fi
+          
+          echo ""
+          echo "🔗 **View all issues:** [GitHub Issues](https://github.com/${{ github.repository }}/issues)"
+          echo ""
+          echo "---"
+          echo "*This summary is automatically generated every Monday at 9 AM UTC*"
+          
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Post to Discussion
+        if: env.POST_TO_DISCUSSION == 'true'
+        run: |
+          # Create discussion title
+          TITLE="📊 Weekly Issue Summary - $(date -u +%Y-%m-%d)"
+          
+          # Get the summary content
+          SUMMARY_CONTENT=$(cat << 'EOF'
+          📊 **Weekly Issue Summary** - $(date -u +%Y-%m-%d)
+          
+          📅 **Period:** $(date -u -d '7 days ago' +%Y-%m-%d) to $(date -u +%Y-%m-%d)
+          
+          🆕 **New Issues:** $(gh issue list --state all --created "$(date -u -d '7 days ago' +%Y-%m-%dT%H:%M:%SZ)..$(date -u +%Y-%m-%dT%H:%M:%SZ)" --json number --jq 'length')
+          
+          ✅ **Closed Issues:** $(gh issue list --state closed --updated "$(date -u -d '7 days ago' +%Y-%m-%dT%H:%M:%SZ)..$(date -u +%Y-%m-%dT%H:%M:%SZ)" --json number --jq 'length')
+          
+          🏷️ **Issues by Label:**
+          EOF
+          )
+          
+          # Add label breakdown
+          IFS=',' read -ra LABELS <<< "$LABELS_TO_INCLUDE"
+          for label in "${LABELS[@]}"; do
+            label=$(echo "$label" | xargs)
+            OPEN_COUNT=$(gh issue list --state open --label "$label" --json number --jq 'length')
+            CLOSED_COUNT=$(gh issue list --state closed --label "$label" --updated "$(date -u -d '7 days ago' +%Y-%m-%dT%H:%M:%SZ)..$(date -u +%Y-%m-%dT%H:%M:%SZ)" --json number --jq 'length')
+            
+            if [ "$OPEN_COUNT" -gt 0 ] || [ "$CLOSED_COUNT" -gt 0 ]; then
+              SUMMARY_CONTENT="$SUMMARY_CONTENT
+          - **$label:** $OPEN_COUNT open, $CLOSED_COUNT closed this week"
+            fi
+          done
+          
+          SUMMARY_CONTENT="$SUMMARY_CONTENT
+          
+          📈 **Summary:**
+          - Total new issues: $(gh issue list --state all --created "$(date -u -d '7 days ago' +%Y-%m-%dT%H:%M:%SZ)..$(date -u +%Y-%m-%dT%H:%M:%SZ)" --json number --jq 'length')
+          - Total closed issues: $(gh issue list --state closed --updated "$(date -u -d '7 days ago' +%Y-%m-%dT%H:%M:%SZ)..$(date -u +%Y-%m-%dT%H:%M:%SZ)" --json number --jq 'length')
+          
+          🔗 **View all issues:** [GitHub Issues](https://github.com/${{ github.repository }}/issues)
+          
+          ---
+          *This summary is automatically generated every Monday at 9 AM UTC*"
+          
+          # Post to discussion
+          gh api graphql -f query='
+          mutation($repositoryId: ID!, $title: String!, $body: String!, $categoryId: ID!) {
+            createDiscussion(input: {
+              repositoryId: $repositoryId,
+              title: $title,
+              body: $body,
+              categoryId: $categoryId
+            }) {
+              discussion {
+                id
+                url
+              }
+            }
+          }' -f repositoryId=$(gh api graphql -f query='query($owner: String!, $repo: String!) { repository(owner: $owner, name: $repo) { id } }' -f owner='${{ github.repository_owner }}' -f repo='${{ github.event.repository.name }}' --jq '.data.repository.id') -f title="$TITLE" -f body="$SUMMARY_CONTENT" -f categoryId=$(gh api graphql -f query='query($owner: String!, $repo: String!) { repository(owner: $owner, name: $repo) { discussionCategories(first: 10) { nodes { id name } } } }' -f owner='${{ github.repository_owner }}' -f repo='${{ github.event.repository.name }}' --jq '.data.repository.discussionCategories.nodes[] | select(.name == "General") | .id')
+          
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Create Summary Artifact
+        run: |
+          echo "📊 Weekly Issue Summary - $(date -u +%Y-%m-%d)" > issue-summary.md
+          echo "" >> issue-summary.md
+          echo "📅 Period: $(date -u -d '7 days ago' +%Y-%m-%d) to $(date -u +%Y-%m-%d)" >> issue-summary.md
+          echo "" >> issue-summary.md
+          echo "🆕 New Issues: $(gh issue list --state all --created "$(date -u -d '7 days ago' +%Y-%m-%dT%H:%M:%SZ)..$(date -u +%Y-%m-%dT%H:%M:%SZ)" --json number --jq 'length')" >> issue-summary.md
+          echo "✅ Closed Issues: $(gh issue list --state closed --updated "$(date -u -d '7 days ago' +%Y-%m-%dT%H:%M:%SZ)..$(date -u +%Y-%m-%dT%H:%M:%SZ)" --json number --jq 'length')" >> issue-summary.md
+          echo "" >> issue-summary.md
+          echo "🏷️ Issues by Label:" >> issue-summary.md
+          
+          IFS=',' read -ra LABELS <<< "$LABELS_TO_INCLUDE"
+          for label in "${LABELS[@]}"; do
+            label=$(echo "$label" | xargs)
+            OPEN_COUNT=$(gh issue list --state open --label "$label" --json number --jq 'length')
+            CLOSED_COUNT=$(gh issue list --state closed --label "$label" --updated "$(date -u -d '7 days ago' +%Y-%m-%dT%H:%M:%SZ)..$(date -u +%Y-%m-%dT%H:%M:%SZ)" --json number --jq 'length')
+            
+            if [ "$OPEN_COUNT" -gt 0 ] || [ "$CLOSED_COUNT" -gt 0 ]; then
+              echo "- **$label:** $OPEN_COUNT open, $CLOSED_COUNT closed this week" >> issue-summary.md
+            fi
+          done
+          
+          echo "" >> issue-summary.md
+          echo "🔗 View all issues: https://github.com/${{ github.repository }}/issues" >> issue-summary.md
+          
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Upload Summary Artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: weekly-issue-summary
+          path: issue-summary.md
+          retention-days: 30
