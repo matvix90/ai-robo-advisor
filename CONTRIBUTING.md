@@ -2,18 +2,24 @@
 
 Thank you for your interest in contributing to the AI Robo Advisor project! We welcome contributions from developers of all skill levels. This document provides comprehensive guidelines on how to contribute effectively to this open-source financial advisory tool.
 
+
 ## Table of Contents
 
+
 - [How to Contribute](#how-to-contribute)
+- [Hacktoberfest Guidelines](#hacktoberfest-guidelines)
 - [Getting Started](#getting-started)
 - [Development Workflow](#development-workflow)
 - [Creating Quality Pull Requests](#creating-quality-pull-requests)
 - [Code Standards](#code-standards)
 - [Testing Guidelines](#testing-guidelines)
-- [Documentation](#documentation)
-- [Priority Features](#priority-features-to-work-on)
+- [Documentation Requirements](#documentation-requirements)
 - [Security Guidelines](#security-guidelines)
-- [Hacktoberfest Guidelines](#hacktoberfest-guidelines)
+- [Thank You](#thank-you)
+- [Community](#community)
+
+
+
 
 
 ## How to Contribute
@@ -31,7 +37,7 @@ Contributions are what make the open-source community such an amazing place to l
 - 🔧 **DevOps**: Improve CI/CD, Docker, deployment processes
 - 🌍 **Localization**: Add multi-language support
 
-### 🎃 Hacktoberfest Guidelines
+##  Hacktoberfest Guidelines
 
 **For contributors participating in Hacktoberfest:**
 
@@ -44,7 +50,7 @@ Please read our detailed Hacktoberfest guidelines and contribution rules:
 - Focus on priority features listed below
 - Follow all guidelines in this document
 
-## 🚀 Getting Started
+##  Getting Started
 
 ### Setting Up Development Environment
 
@@ -93,7 +99,7 @@ Please read our detailed Hacktoberfest guidelines and contribution rules:
    python -m pytest tests/
    ```
 
-## 🔄 Development Workflow
+##  Development Workflow
 
 ### 1. Fork and Clone
 
@@ -188,7 +194,7 @@ python -m pytest tests/test_nodes.py -k "test_portfolio"
 run-advisor --show-reasoning
 ```
 
-## 🚀 Creating Quality Pull Requests
+##  Creating Quality Pull Requests
 
 This section provides comprehensive guidelines for creating high-quality PRs that will be accepted quickly and efficiently.
 
@@ -461,7 +467,7 @@ python -m pytest tests/ --cov=src --cov-report=term-missing
 
 ---
 
-## 📝 Code Standards
+##  Code Standards
 
 ### Python Style Guidelines
 
@@ -523,9 +529,8 @@ def validate_portfolio(data: dict):
             raise ValueError(f"Missing: {field}")
 ```
 
-## 🧪 Testing Guidelines
+##  Testing Guidelines
 
-## 🧪 Testing Guidelines
 
 **All contributions must include comprehensive tests!** Maintain 90%+ coverage for new code.
 
@@ -613,7 +618,7 @@ class TestFeatureIntegration:
 - Skip testing error conditions
 - Write overly complex tests
 
-## 📚 Documentation Requirements
+##  Documentation Requirements
 
 **All code must include proper documentation:**
 
@@ -622,7 +627,7 @@ class TestFeatureIntegration:
 - **README**: Update for new features and installation requirements
 - **API**: Document public methods with types and examples
 
-## 🔒 Security Guidelines
+##  Security Guidelines
 
 **Essential security practices:**
 
@@ -653,7 +658,7 @@ def validate_input(data: dict):
 
 
 
-## Thank You 🙏
+## Thank You 
 
 Thank you for contributing to AI Robo Advisor! Your efforts help democratize access to professional-grade investment analysis tools and make financial planning more accessible to everyone.
 
