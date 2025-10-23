@@ -480,7 +480,7 @@ response = AnalysisAgent(
 class AnalysisResponse(BaseModel):
     is_approved: bool              # Overall approval
     strengths: Optional[str]       # Portfolio strengths
-    weeknesses: Optional[str]      # Areas of concern (note: typo in original)
+    weaknesses: Optional[str]      # Areas of concern
     overall_assessment: Optional[str]  # Balanced evaluation
     advices: Optional[str]         # Consolidated recommendations
 ```
