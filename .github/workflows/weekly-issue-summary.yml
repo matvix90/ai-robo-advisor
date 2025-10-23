@@ -154,21 +154,20 @@ jobs:
           # Read the content for posting
           SUMMARY_CONTENT=$(cat summary_content.txt)
           
-          # Post to discussion
-          gh api graphql -f query='
-          mutation($repositoryId: ID!, $title: String!, $body: String!, $categoryId: ID!) {
-            createDiscussion(input: {
-              repositoryId: $repositoryId,
-              title: $title,
-              body: $body,
-              categoryId: $categoryId
-            }) {
-              discussion {
-                id
-                url
-              }
-            }
-          }' -f repositoryId=$(gh api graphql -f query='query($owner: String!, $repo: String!) { repository(owner: $owner, name: $repo) { id } }' -f owner='${{ github.repository_owner }}' -f repo='${{ github.event.repository.name }}' --jq '.data.repository.id') -f title="$TITLE" -f body="$SUMMARY_CONTENT" -f categoryId=$(gh api graphql -f query='query($owner: String!, $repo: String!) { repository(owner: $owner, name: $repo) { discussionCategories(first: 10) { nodes { id name } } } }' -f owner='${{ github.repository_owner }}' -f repo='${{ github.event.repository.name }}' --jq '.data.repository.discussionCategories.nodes[] | select(.name == "General") | .id')
+          # Post to discussion using REST API (simpler approach)
+          echo "Posting to GitHub Discussions..."
+          
+          # Create discussion using REST API
+          if gh api repos/${{ github.repository_owner }}/${{ github.event.repository.name }}/discussions \
+            -f title="$TITLE" \
+            -f body="$SUMMARY_CONTENT" \
+            -f category="General"; then
+            echo "✅ Discussion posted successfully!"
+          else
+            echo "❌ Discussion posting failed - Discussions may not be enabled"
+            echo "📝 Summary content saved to artifact instead"
+            echo "$SUMMARY_CONTENT" > discussion_fallback.txt
+          fi
           
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
@@ -223,5 +222,7 @@ jobs:
         uses: actions/upload-artifact@v4
         with:
           name: weekly-issue-summary
-          path: issue-summary.md
+          path: |
+            issue-summary.md
+            discussion_fallback.txt
           retention-days: 30
