@@ -5,15 +5,16 @@ Thank you for your interest in contributing to the AI Robo Advisor project! We w
 ## Table of Contents
 
 - [How to Contribute](#how-to-contribute)
-- [Getting Started](#-getting-started)
-- [Development Workflow](#-development-workflow)
-- [Creating Quality Pull Requests](#-creating-quality-pull-requests)
-- [Code Standards](#-code-standards)
-- [Testing Guidelines](#-testing-guidelines)
-- [Documentation](#-documentation)
+- [Getting Started](#getting-started)
+- [Development Workflow](#development-workflow)
+- [Creating Quality Pull Requests](#creating-quality-pull-requests)
+- [Code Standards](#code-standards)
+- [Testing Guidelines](#testing-guidelines)
+- [Documentation](#documentation)
 - [Priority Features](#priority-features-to-work-on)
-- [Security Guidelines](#-security-guidelines)
-- [Hacktoberfest Guidelines](#-hacktoberfest-guidelines)
+- [Security Guidelines](#security-guidelines)
+- [Hacktoberfest Guidelines](#hacktoberfest-guidelines)
+
 
 ## How to Contribute
 
