@@ -105,16 +105,16 @@ jobs:
           TOTAL_ISSUES=$(gh issue list --state all --json number --jq 'length')
           
           # Create summary content
-          SUMMARY_CONTENT="📊 **Weekly Issue Summary** - $(date -u +%Y-%m-%d)
-
-📅 **Period:** $(date -u -d '7 days ago' +%Y-%m-%d) to $(date -u +%Y-%m-%d)
-
-📋 **Open Issues:** $OPEN_ISSUES
-✅ **Closed Issues:** $CLOSED_ISSUES
-📊 **Total Issues:** $TOTAL_ISSUES
-
-🏷️ **Issues by Label:**"
-
+          echo "📊 **Weekly Issue Summary** - $(date -u +%Y-%m-%d)" > summary_content.txt
+          echo "" >> summary_content.txt
+          echo "📅 **Period:** $(date -u -d '7 days ago' +%Y-%m-%d) to $(date -u +%Y-%m-%d)" >> summary_content.txt
+          echo "" >> summary_content.txt
+          echo "📋 **Open Issues:** $OPEN_ISSUES" >> summary_content.txt
+          echo "✅ **Closed Issues:** $CLOSED_ISSUES" >> summary_content.txt
+          echo "📊 **Total Issues:** $TOTAL_ISSUES" >> summary_content.txt
+          echo "" >> summary_content.txt
+          echo "🏷️ **Issues by Label:**" >> summary_content.txt
+          
           # Add label breakdown
           IFS=',' read -ra LABELS <<< "$LABELS_TO_INCLUDE"
           for label in "${LABELS[@]}"; do
@@ -123,37 +123,36 @@ jobs:
             CLOSED_COUNT=$(gh issue list --state closed --label "$label" --json number --jq 'length')
             
             if [ "$OPEN_COUNT" -gt 0 ] || [ "$CLOSED_COUNT" -gt 0 ]; then
-              SUMMARY_CONTENT="$SUMMARY_CONTENT
-- **$label:** $OPEN_COUNT open, $CLOSED_COUNT closed"
+              echo "- **$label:** $OPEN_COUNT open, $CLOSED_COUNT closed" >> summary_content.txt
             fi
           done
           
           # Calculate completion rate
           if [ $TOTAL_ISSUES -gt 0 ]; then
             COMPLETION_RATE=$(( (CLOSED_ISSUES * 100) / TOTAL_ISSUES ))
-            SUMMARY_CONTENT="$SUMMARY_CONTENT
-
-📈 **Summary:**
-- Open issues: $OPEN_ISSUES
-- Closed issues: $CLOSED_ISSUES
-- Total issues: $TOTAL_ISSUES
-- Completion rate: $COMPLETION_RATE%"
+            echo "" >> summary_content.txt
+            echo "📈 **Summary:**" >> summary_content.txt
+            echo "- Open issues: $OPEN_ISSUES" >> summary_content.txt
+            echo "- Closed issues: $CLOSED_ISSUES" >> summary_content.txt
+            echo "- Total issues: $TOTAL_ISSUES" >> summary_content.txt
+            echo "- Completion rate: $COMPLETION_RATE%" >> summary_content.txt
           else
-            SUMMARY_CONTENT="$SUMMARY_CONTENT
-
-📈 **Summary:**
-- Open issues: $OPEN_ISSUES
-- Closed issues: $CLOSED_ISSUES
-- Total issues: $TOTAL_ISSUES
-- Completion rate: N/A (no issues)"
+            echo "" >> summary_content.txt
+            echo "📈 **Summary:**" >> summary_content.txt
+            echo "- Open issues: $OPEN_ISSUES" >> summary_content.txt
+            echo "- Closed issues: $CLOSED_ISSUES" >> summary_content.txt
+            echo "- Total issues: $TOTAL_ISSUES" >> summary_content.txt
+            echo "- Completion rate: N/A (no issues)" >> summary_content.txt
           fi
           
-          SUMMARY_CONTENT="$SUMMARY_CONTENT
-
-🔗 **View all issues:** [GitHub Issues](https://github.com/${{ github.repository }}/issues)
-
----
-*This summary is automatically generated every Monday at 9 AM UTC*"
+          echo "" >> summary_content.txt
+          echo "🔗 **View all issues:** [GitHub Issues](https://github.com/${{ github.repository }}/issues)" >> summary_content.txt
+          echo "" >> summary_content.txt
+          echo "---" >> summary_content.txt
+          echo "*This summary is automatically generated every Monday at 9 AM UTC*" >> summary_content.txt
+          
+          # Read the content for posting
+          SUMMARY_CONTENT=$(cat summary_content.txt)
           
           # Post to discussion
           gh api graphql -f query='
