@@ -32,7 +32,15 @@ jobs:
         run: |
           echo "📊 **Weekly Issue Summary** - $(date -u +%Y-%m-%d)"
           echo ""
-          echo "📅 **Period:** $(date -u -d '7 days ago' +%Y-%m-%d) to $(date -u +%Y-%m-%d)"
+          # Portable date calculation for 7 days ago
+          if [[ "$OSTYPE" == "darwin"* ]]; then
+            # macOS/BSD date
+            SEVEN_DAYS_AGO=$(date -u -v-7d +%Y-%m-%d)
+          else
+            # Linux/GNU date
+            SEVEN_DAYS_AGO=$(date -u -d '7 days ago' +%Y-%m-%d)
+          fi
+          echo "📅 **Period:** $SEVEN_DAYS_AGO to $(date -u +%Y-%m-%d)"
           echo ""
           
           # Get total issues count (simplified approach)
@@ -42,13 +50,29 @@ jobs:
           OPEN_ISSUES=$(gh issue list --state open --json number --jq 'length')
           echo "📋 **Open Issues:** $OPEN_ISSUES"
           
-          # Get total closed issues
+          # Get new issues created in the past week
+          NEW_ISSUES=$(gh issue list --state all --json number,createdAt --jq '[.[] | select(.createdAt > "'$SEVEN_DAYS_AGO'T00:00:00Z'")] | length' 2>/dev/null || echo "0")
+          echo "🆕 **New Issues (This Week):** $NEW_ISSUES"
+          
+          # Get closed issues in the past week
+          CLOSED_THIS_WEEK=$(gh issue list --state closed --json number,closedAt --jq '[.[] | select(.closedAt != null and .closedAt > "'$SEVEN_DAYS_AGO'T00:00:00Z'")] | length' 2>/dev/null || echo "0")
+          echo "✅ **Closed Issues (This Week):** $CLOSED_THIS_WEEK"
+          
+          # Get total closed issues (all time)
           CLOSED_ISSUES=$(gh issue list --state closed --json number --jq 'length')
-          echo "✅ **Closed Issues:** $CLOSED_ISSUES"
+          echo "📊 **Closed Issues (All Time):** $CLOSED_ISSUES"
           
           # Get total issues
           TOTAL_ISSUES=$(gh issue list --state all --json number --jq 'length')
-          echo "📊 **Total Issues:** $TOTAL_ISSUES"
+          echo "📈 **Total Issues:** $TOTAL_ISSUES"
+          
+          # Set outputs for use in subsequent steps
+          echo "open_issues=$OPEN_ISSUES" >> $GITHUB_OUTPUT
+          echo "new_issues=$NEW_ISSUES" >> $GITHUB_OUTPUT
+          echo "closed_this_week=$CLOSED_THIS_WEEK" >> $GITHUB_OUTPUT
+          echo "closed_issues=$CLOSED_ISSUES" >> $GITHUB_OUTPUT
+          echo "total_issues=$TOTAL_ISSUES" >> $GITHUB_OUTPUT
+          echo "seven_days_ago=$SEVEN_DAYS_AGO" >> $GITHUB_OUTPUT
           
           echo ""
           echo "🏷️ **Issues by Label:**"
@@ -62,18 +86,20 @@ jobs:
             # Count open issues with this label
             OPEN_COUNT=$(gh issue list --state open --label "$label" --json number --jq 'length')
             
-            # Count closed issues with this label
+            # Count closed issues with this label (all time)
             CLOSED_COUNT=$(gh issue list --state closed --label "$label" --json number --jq 'length')
             
             if [ "$OPEN_COUNT" -gt 0 ] || [ "$CLOSED_COUNT" -gt 0 ]; then
-              echo "- **$label:** $OPEN_COUNT open, $CLOSED_COUNT closed"
+              echo "- **$label:** $OPEN_COUNT open, $CLOSED_COUNT closed (all time)"
             fi
           done
           
           echo ""
           echo "📈 **Summary:**"
           echo "- Open issues: $OPEN_ISSUES"
-          echo "- Closed issues: $CLOSED_ISSUES"
+          echo "- New issues this week: $NEW_ISSUES"
+          echo "- Closed this week: $CLOSED_THIS_WEEK"
+          echo "- Closed issues (all time): $CLOSED_ISSUES"
           echo "- Total issues: $TOTAL_ISSUES"
           
           # Calculate completion rate
@@ -99,19 +125,24 @@ jobs:
           # Create discussion title
           TITLE="📊 Weekly Issue Summary - $(date -u +%Y-%m-%d)"
           
-          # Get basic issue counts
-          OPEN_ISSUES=$(gh issue list --state open --json number --jq 'length')
-          CLOSED_ISSUES=$(gh issue list --state closed --json number --jq 'length')
-          TOTAL_ISSUES=$(gh issue list --state all --json number --jq 'length')
+          # Use issue counts from previous step
+          OPEN_ISSUES="${{ steps.summary.outputs.open_issues }}"
+          NEW_ISSUES="${{ steps.summary.outputs.new_issues }}"
+          CLOSED_THIS_WEEK="${{ steps.summary.outputs.closed_this_week }}"
+          CLOSED_ISSUES="${{ steps.summary.outputs.closed_issues }}"
+          TOTAL_ISSUES="${{ steps.summary.outputs.total_issues }}"
+          SEVEN_DAYS_AGO="${{ steps.summary.outputs.seven_days_ago }}"
           
           # Create summary content
           echo "📊 **Weekly Issue Summary** - $(date -u +%Y-%m-%d)" > summary_content.txt
           echo "" >> summary_content.txt
-          echo "📅 **Period:** $(date -u -d '7 days ago' +%Y-%m-%d) to $(date -u +%Y-%m-%d)" >> summary_content.txt
+          echo "📅 **Period:** $SEVEN_DAYS_AGO to $(date -u +%Y-%m-%d)" >> summary_content.txt
           echo "" >> summary_content.txt
           echo "📋 **Open Issues:** $OPEN_ISSUES" >> summary_content.txt
-          echo "✅ **Closed Issues:** $CLOSED_ISSUES" >> summary_content.txt
-          echo "📊 **Total Issues:** $TOTAL_ISSUES" >> summary_content.txt
+          echo "🆕 **New Issues (This Week):** $NEW_ISSUES" >> summary_content.txt
+          echo "✅ **Closed Issues (This Week):** $CLOSED_THIS_WEEK" >> summary_content.txt
+          echo "📊 **Closed Issues (All Time):** $CLOSED_ISSUES" >> summary_content.txt
+          echo "📈 **Total Issues:** $TOTAL_ISSUES" >> summary_content.txt
           echo "" >> summary_content.txt
           echo "🏷️ **Issues by Label:**" >> summary_content.txt
           
@@ -123,7 +154,7 @@ jobs:
             CLOSED_COUNT=$(gh issue list --state closed --label "$label" --json number --jq 'length')
             
             if [ "$OPEN_COUNT" -gt 0 ] || [ "$CLOSED_COUNT" -gt 0 ]; then
-              echo "- **$label:** $OPEN_COUNT open, $CLOSED_COUNT closed" >> summary_content.txt
+              echo "- **$label:** $OPEN_COUNT open, $CLOSED_COUNT closed (all time)" >> summary_content.txt
             fi
           done
           
@@ -133,14 +164,18 @@ jobs:
             echo "" >> summary_content.txt
             echo "📈 **Summary:**" >> summary_content.txt
             echo "- Open issues: $OPEN_ISSUES" >> summary_content.txt
-            echo "- Closed issues: $CLOSED_ISSUES" >> summary_content.txt
+            echo "- New issues this week: $NEW_ISSUES" >> summary_content.txt
+            echo "- Closed this week: $CLOSED_THIS_WEEK" >> summary_content.txt
+            echo "- Closed issues (all time): $CLOSED_ISSUES" >> summary_content.txt
             echo "- Total issues: $TOTAL_ISSUES" >> summary_content.txt
             echo "- Completion rate: $COMPLETION_RATE%" >> summary_content.txt
           else
             echo "" >> summary_content.txt
             echo "📈 **Summary:**" >> summary_content.txt
             echo "- Open issues: $OPEN_ISSUES" >> summary_content.txt
-            echo "- Closed issues: $CLOSED_ISSUES" >> summary_content.txt
+            echo "- New issues this week: $NEW_ISSUES" >> summary_content.txt
+            echo "- Closed this week: $CLOSED_THIS_WEEK" >> summary_content.txt
+            echo "- Closed issues (all time): $CLOSED_ISSUES" >> summary_content.txt
             echo "- Total issues: $TOTAL_ISSUES" >> summary_content.txt
             echo "- Completion rate: N/A (no issues)" >> summary_content.txt
           fi
@@ -154,17 +189,60 @@ jobs:
           # Read the content for posting
           SUMMARY_CONTENT=$(cat summary_content.txt)
           
-          # Post to discussion using REST API (simpler approach)
+          # Post to discussion using GraphQL API (required for discussions)
           echo "Posting to GitHub Discussions..."
           
-          # Create discussion using REST API
-          if gh api repos/${{ github.repository_owner }}/${{ github.event.repository.name }}/discussions \
-            -f title="$TITLE" \
-            -f body="$SUMMARY_CONTENT" \
-            -f category="General"; then
-            echo "✅ Discussion posted successfully!"
+          # First, get the repository ID and discussion category ID
+          REPO_ID=$(gh api graphql -f query='
+            query($owner: String!, $repo: String!) {
+              repository(owner: $owner, name: $repo) {
+                id
+                discussionCategories(first: 10) {
+                  nodes {
+                    id
+                    name
+                  }
+                }
+              }
+            }' -f owner="${{ github.repository_owner }}" -f repo="${{ github.event.repository.name }}" --jq '.data.repository.id')
+          
+          # Get the General category ID
+          CATEGORY_ID=$(gh api graphql -f query='
+            query($owner: String!, $repo: String!) {
+              repository(owner: $owner, name: $repo) {
+                discussionCategories(first: 10) {
+                  nodes {
+                    id
+                    name
+                  }
+                }
+              }
+            }' -f owner="${{ github.repository_owner }}" -f repo="${{ github.event.repository.name }}" --jq '.data.repository.discussionCategories.nodes[] | select(.name == "General") | .id')
+          
+          # Create discussion using GraphQL mutation
+          if [ -n "$REPO_ID" ] && [ -n "$CATEGORY_ID" ]; then
+            if gh api graphql -f query='
+              mutation($repositoryId: ID!, $categoryId: ID!, $title: String!, $body: String!) {
+                createDiscussion(input: {
+                  repositoryId: $repositoryId
+                  categoryId: $categoryId
+                  title: $title
+                  body: $body
+                }) {
+                  discussion {
+                    id
+                    url
+                  }
+                }
+              }' -f repositoryId="$REPO_ID" -f categoryId="$CATEGORY_ID" -f title="$TITLE" -f body="$SUMMARY_CONTENT"; then
+              echo "✅ Discussion posted successfully!"
+            else
+              echo "❌ Discussion posting failed - GraphQL mutation failed"
+              echo "📝 Summary content saved to artifact instead"
+              echo "$SUMMARY_CONTENT" > discussion_fallback.txt
+            fi
           else
-            echo "❌ Discussion posting failed - Discussions may not be enabled"
+            echo "❌ Discussion posting failed - Could not find repository or category ID"
             echo "📝 Summary content saved to artifact instead"
             echo "$SUMMARY_CONTENT" > discussion_fallback.txt
           fi
@@ -174,19 +252,24 @@ jobs:
 
       - name: Create Summary Artifact
         run: |
-          # Get basic issue counts
-          OPEN_ISSUES=$(gh issue list --state open --json number --jq 'length')
-          CLOSED_ISSUES=$(gh issue list --state closed --json number --jq 'length')
-          TOTAL_ISSUES=$(gh issue list --state all --json number --jq 'length')
+          # Use issue counts from previous step
+          OPEN_ISSUES="${{ steps.summary.outputs.open_issues }}"
+          NEW_ISSUES="${{ steps.summary.outputs.new_issues }}"
+          CLOSED_THIS_WEEK="${{ steps.summary.outputs.closed_this_week }}"
+          CLOSED_ISSUES="${{ steps.summary.outputs.closed_issues }}"
+          TOTAL_ISSUES="${{ steps.summary.outputs.total_issues }}"
+          SEVEN_DAYS_AGO="${{ steps.summary.outputs.seven_days_ago }}"
           
           # Create markdown file
           echo "📊 Weekly Issue Summary - $(date -u +%Y-%m-%d)" > issue-summary.md
           echo "" >> issue-summary.md
-          echo "📅 Period: $(date -u -d '7 days ago' +%Y-%m-%d) to $(date -u +%Y-%m-%d)" >> issue-summary.md
+          echo "📅 Period: $SEVEN_DAYS_AGO to $(date -u +%Y-%m-%d)" >> issue-summary.md
           echo "" >> issue-summary.md
           echo "📋 Open Issues: $OPEN_ISSUES" >> issue-summary.md
-          echo "✅ Closed Issues: $CLOSED_ISSUES" >> issue-summary.md
-          echo "📊 Total Issues: $TOTAL_ISSUES" >> issue-summary.md
+          echo "🆕 New Issues (This Week): $NEW_ISSUES" >> issue-summary.md
+          echo "✅ Closed Issues (This Week): $CLOSED_THIS_WEEK" >> issue-summary.md
+          echo "📊 Closed Issues (All Time): $CLOSED_ISSUES" >> issue-summary.md
+          echo "📈 Total Issues: $TOTAL_ISSUES" >> issue-summary.md
           echo "" >> issue-summary.md
           echo "🏷️ Issues by Label:" >> issue-summary.md
           
@@ -197,7 +280,7 @@ jobs:
             CLOSED_COUNT=$(gh issue list --state closed --label "$label" --json number --jq 'length')
             
             if [ "$OPEN_COUNT" -gt 0 ] || [ "$CLOSED_COUNT" -gt 0 ]; then
-              echo "- **$label:** $OPEN_COUNT open, $CLOSED_COUNT closed" >> issue-summary.md
+              echo "- **$label:** $OPEN_COUNT open, $CLOSED_COUNT closed (all time)" >> issue-summary.md
             fi
           done
           
@@ -225,4 +308,5 @@ jobs:
           path: |
             issue-summary.md
             discussion_fallback.txt
+          if-no-files-found: ignore
           retention-days: 30
