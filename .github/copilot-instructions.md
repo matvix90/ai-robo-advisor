@@ -6,36 +6,33 @@
 
 The project’s goal is to create a modular, extendable architecture for building **AI-powered financial advisory agents** that combine reasoning from LLMs with structured market data.
 
-Core design principles:
-- Modular design across `src/` with clean separation of concerns
-- Consistent typing and data validation via **Pydantic**
-- Secure environment configuration via **python-decouple**
-- Multi-provider LLM integration for flexibility and benchmarking
-- Emphasis on financial transparency, explainability, and reproducibility
+---
 
 ---
 
-## ⚙️ Frameworks and Dependencies
+## Architecture
+The application follows a **modular, layered design**:
 
-Primary frameworks and libraries:
+- **Frontend / Interface Layer** – Conversational UI or CLI for user input and report display.  
+- **Core Logic Layer** – Handles financial computations, portfolio simulation, and recommendation strategies.  
+- **AI Layer** – LangGraph agent network for intent detection, query routing, and contextual response generation.  
+- **Data Layer** – Integrations with external financial APIs (Alpha Vantage, Yahoo Finance, Polygon.io) for live and historical data.  
+- **Storage Layer** – SQLite / PostgreSQL for caching and portfolio persistence.
 
-| Purpose | Libraries |
-|----------|------------|
-| LLM & Agents | `langchain`, `langgraph`, `langchain-core`, `langchain-groq` |
-| Configuration | `python-decouple` |
-| Validation | `pydantic` |
-| Testing | `pytest` |
-| Data & Utilities | `pandas`, `requests`, `json`, `typing` |
-| Environment | `.env` configuration for API keys (OpenAI, Groq, Anthropic, Google) |
+Copilot should keep modules loosely coupled and easily testable.
 
-**LLM Providers supported:**
-- `OpenAI`
-- `Anthropic`
-- `Groq`
-- `Google GenAI`
+---
 
-Copilot should **not introduce new dependencies** unless explicitly required.  
-If suggesting a new library, it must integrate smoothly with existing LangChain abstractions.
+## Key Components
+| Directory | Description |
+|------------|--------------|
+| `src/main.py` | Application entry point – initializes agents, pipelines, and I/O interface. |
+| `src/agents/` | LangGraph agent nodes handling user intents (risk, allocation, summary). |
+| `src/core/` | Core financial logic and computational models. |
+| `src/services/` | API connectors for market data and user portfolio information. |
+| `src/utils/` | Logging, error handling, and helper utilities. |
+| `tests/` | Unit and integration tests. |
+
 
 ---
 
@@ -47,36 +44,28 @@ If suggesting a new library, it must integrate smoothly with existing LangChain 
 **Docstrings:** Google-style, concise, and action-oriented  
 **Testing:** pytest with descriptive, lowercase test names
 
-### Naming Conventions
+---
 
-| Element | Convention | Example |
-|----------|-------------|----------|
-| Classes | PascalCase | `FinancialAgent`, `LLMModel` |
-| Functions | snake_case | `get_llm_model()`, `load_models()` |
-| Constants | UPPER_CASE | `AVAILABLE_MODELS`, `DEFAULT_TEMPERATURE` |
-| Files | lowercase_underscore | `models.py`, `data_loader.py` |
-| Branches | feature-based | `feat/new-provider`, `fix/config-bug` |
+
+## Common Patterns
+- **Pipeline Pattern** – For chaining computations: data → analysis → recommendation.  
+- **Factory Pattern** – For dynamically creating strategy or agent instances.  
+- **Observer Pattern** – For streaming live market updates.  
+- **Repository Pattern** – For abstracting data access from business logic.
+
+Copilot should prefer these patterns when suggesting architecture-level code.
 
 ---
 
-## 🧠 Domain-Specific Context (Finance & AI)
 
-GitHub Copilot should interpret key project terms as follows:
-
-| Concept | Meaning |
-|----------|----------|
-| **Advisor** | AI agent providing portfolio or market advice |
-| **Client** | End user or investor interacting with the system |
-| **Asset / Security** | Stocks, ETFs, bonds, or funds analyzed |
-| **Portfolio** | Collection of assets managed or analyzed |
-| **Risk / Reward** | Trade-offs used in optimization logic |
-| **Temperature** | Creativity control in LLM-based responses |
-
-Copilot suggestions should:
-- Keep all **financial reasoning explainable**
-- Avoid generating unverified investment advice
-- Use **structured data flow** (input → processing → model → output)
-- Handle exceptions gracefully when querying APIs
+## File Naming Conventions
+| File Type | Naming Rule | Example |
+|------------|--------------|----------|
+| Python Modules | `snake_case.py` | `portfolio_optimizer.py` |
+| Test Files | `test_<module>.py` | `test_portfolio_optimizer.py` |
+| Config | `config.yaml` | |
+| Jupyter Notebooks | `<topic>_analysis.ipynb` | `risk_analysis.ipynb` |
+| Scripts | `<action>_script.py` | `fetch_data_script.py` |
 
 ---
 
@@ -97,21 +86,6 @@ tests/
 
 The **`get_llm_model()`** function is central — it dynamically initializes LLMs using API keys, temperature, and provider type.
 
----
-
-## 🧾 Best Practices for Copilot-Assisted Development
-
-When Copilot is suggesting code:
-
-1. ✅ **Always use `config("KEY", default=None)`** for environment variables.  
-   Never hardcode API keys.
-2. ✅ **Wrap API logic in try/except** with descriptive error messages.
-3. ✅ **Leverage `pydantic.BaseModel`** for data validation and schema consistency.
-4. ✅ **Keep docstrings up-to-date** with argument/return types.
-5. ✅ **Follow modular imports** — reference from `src.llm`, not from relative paths.
-6. ✅ **Include unit tests** in `tests/` for every new helper or model.
-7. 🚫 **Do not introduce new dependencies** without adding them to `pyproject.toml`.
-8. 🚫 **Avoid direct external network calls** unless mocking or using configured APIs.
 
 ---
 
@@ -154,50 +128,74 @@ def test_model_loading():
     assert len(models.models) > 0
 ```
 
----
-
-## 🧩 Contribution Guidelines Summary
-
-- Follow [CONTRIBUTING.md](../CONTRIBUTING.md)
-- Use `black`, `isort`, and `pytest` before submitting PRs
-- Write descriptive commit messages:
-  - `feat:` → new feature
-  - `fix:` → bug fix
-  - `docs:` → documentation only
-  - `refactor:` → code restructuring
-- Open PRs with **clear description + linked issue**
 
 ---
 
-## 🔒 Environment & Security
+## Key Dependencies
+- **Core:** `python >= 3.10`, `langgraph`, `pandas`, `numpy`, `scikit-learn`
+- **APIs:** `requests`, `alpha_vantage`, `yfinance`, `polygon-api-client`
+- **AI:** `transformers`, `sentence-transformers`, `openai`
+- **Visualization:** `plotly`, `matplotlib`, `streamlit`
+- **Testing:** `pytest`, `coverage`
 
-The project uses `.env` variables for API credentials:
-```
-OPENAI_API_KEY=your-OPENAI-api-key
-ANTHROPIC_API_KEY=your-ANTHROPIC-api-key
-GOOGLE_API_KEY=your-GOOGLE-api-key
-GROQ_API_KEY=your-GROQ-api-key
-```
-
-Copilot must:
-- **Never** suggest embedding plaintext keys or secrets.
-- **Never** store keys in code examples.
-- Use `python-decouple`’s `config()` exclusively for API access.
 
 ---
 
-## ✅ Summary
+   
+## Environment Setup
+```bash
+# Clone repository
+git clone https://github.com/matvix90/ai-robo-advisor.git
+cd ai-robo-advisor
 
-This repository powers an **AI-driven financial advisory framework** built on **LangChain**, **LangGraph**, and **Pydantic** principles.
+# Create and activate virtual environment
+python -m venv venv
+source venv/bin/activate  # Windows: venv\Scripts\activate
 
-Copilot should:
-- Suggest code consistent with the existing modular architecture
-- Follow PEP8, Pydantic models, and Google-style docstrings
-- Use environment-based configuration, never hardcoded values
-- Generate finance-aware logic (advice, portfolio handling, explainability)
-- Prioritize reliability, transparency, and testability
+# Install dependencies
+pip install -r requirements.txt  # or: poetry install
+
+# Set environment variables
+export ALPHA_VANTAGE_KEY="your_api_key_here"
+
+# Run all tests
+pytest -v
+
+# Run tests with coverage
+pytest --cov=src
+
+# Run a single module test
+pytest tests/test_portfolio_optimizer.py
+```
+All new code should pass unit tests before submission.
+
+---
+
+## Testing Commands
+
+Use the following commands before committing or pushing new code:
 
 ```
+# 1. Run all tests
+pytest -v
+
+# 2. Run tests with coverage report
+pytest --cov=src --cov-report=term-missing
+
+# 3. Run tests for a single module
+pytest tests/test_portfolio_optimizer.py -v
+
+# 4. Check code style with flake8
+flake8 src tests
+
+# 5. Auto-format code with Black
+black src tests
+
+# 6. Static type checking
+mypy src
+
+# 7. Run all quality checks together
+pytest --cov=src && flake8 src && mypy src
 
 ```
-
+All commits should pass these checks before opening a pull request.
