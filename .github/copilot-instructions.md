@@ -143,28 +143,35 @@ def test_model_loading():
 
    
 ## Environment Setup
-```bash
+
 # Clone repository
+```bash
 git clone https://github.com/matvix90/ai-robo-advisor.git
 cd ai-robo-advisor
-
+```
 # Create and activate virtual environment
+```
 python -m venv venv
 source venv/bin/activate  # Windows: venv\Scripts\activate
-
+```
 # Install dependencies
+```
 pip install -r requirements.txt  # or: poetry install
-
+```
 # Set environment variables
+```
 export ALPHA_VANTAGE_KEY="your_api_key_here"
-
+```
 # Run all tests
+```
 pytest -v
-
+```
 # Run tests with coverage
+```
 pytest --cov=src
-
+```
 # Run a single module test
+```
 pytest tests/test_portfolio_optimizer.py
 ```
 All new code should pass unit tests before submission.
@@ -175,27 +182,34 @@ All new code should pass unit tests before submission.
 
 Use the following commands before committing or pushing new code:
 
-```
+
 # 1. Run all tests
-pytest -v
-
-# 2. Run tests with coverage report
-pytest --cov=src --cov-report=term-missing
-
-# 3. Run tests for a single module
-pytest tests/test_portfolio_optimizer.py -v
-
-# 4. Check code style with flake8
-flake8 src tests
-
-# 5. Auto-format code with Black
-black src tests
-
-# 6. Static type checking
-mypy src
-
-# 7. Run all quality checks together
-pytest --cov=src && flake8 src && mypy src
-
 ```
+pytest -v
+```
+# 2. Run tests with coverage report
+```
+pytest --cov=src --cov-report=term-missing
+```
+# 3. Run tests for a single module
+```
+pytest tests/test_portfolio_optimizer.py -v
+```
+# 4. Check code style with flake8
+```
+flake8 src tests
+```
+# 5. Auto-format code with Black
+```
+black src tests
+```
+# 6. Static type checking
+```
+mypy src
+```
+# 7. Run all quality checks together
+```
+pytest --cov=src && flake8 src && mypy src
+```
+
 All commits should pass these checks before opening a pull request.
