@@ -1,6 +1,7 @@
-from graph.state import State  
-from data.models import InvestmentAgent, PortfolioPreference  
+from data.models import InvestmentAgent, PortfolioPreference
+from graph.state import State
 import metrics
+
 # === Internal Timed Function ===
 
 @metrics.track_inference_duration(model_name="investment_agent")

@@ -50,7 +50,7 @@ model_inference_duration_seconds = Histogram(
 )
 
 # --- Decorator for Model Inference ---
-# (This was previously at the wrong indentation)
+# Decorator to track and record model inference duration
 def track_inference_duration(model_name: str):
     """
     Decorator to track inference time for a specific model.
@@ -96,5 +96,5 @@ def push_metrics():
         )
         print("Successfully pushed metrics to Pushgateway.")
     except Exception as e:
-        print(f"❌ Error: Could not push metrics to Pushgateway: {e}")
+         print(f"[ERROR] Could not push metrics to Pushgateway: {e}")
         print("Please ensure the Pushgateway is running at " + PUSHGATEWAY_URL)

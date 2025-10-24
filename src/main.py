@@ -1,47 +1,48 @@
 import sys
 import argparse
+import time  # <-- Import time
+from . import metrics  # <-- Import your new metrics module
 
 from langgraph.graph import StateGraph, START, END
 
-from nodes.investment_agents.goal_based import investment_strategy
-from nodes.portfolios_agent import create_portfolio
-from nodes.analyst_agents.analysis_workflow import create_analyst_graph
+from .nodes.investment_agents.goal_based import investment_strategy
+from .nodes.portfolios_agent import create_portfolio
+from .nodes.analyst_agents.analysis_workflow import create_analyst_graph
 
-from graph.state import State
-from utils.display import print_strategy, print_portfolio, print_analysis_response
-from utils.questionnaires import choose_llm_model, get_user_preferences
-from data.models import PortfolioPreference
+from .graph.state import State
+from .utils.display import print_strategy, print_portfolio, print_analysis_response
+from .utils.questionnaires import choose_llm_model, get_user_preferences
+from .data.models import PortfolioPreference
 
-from llm.models import load_models, get_llm_model
+from .llm.models import load_models, get_llm_model
 
 
 # === Workflow Execution ===
 def run_workflow(
-        show_reasoning:bool, 
-        investment_llm_agent, 
+        show_reasoning: bool,
+        investment_llm_agent,
         portfolio_llm_agent,
         analyst_llm_agent,
-        analyst:str=None,
-        preferences:PortfolioPreference=None
-    ):
-    
+        analyst: str = None,
+        preferences: PortfolioPreference = None
+):
     agent = create_workflow()
 
     result = agent.invoke(
         {
-            'data':{
+            'data': {
                 'investment': {
                     'analyst': analyst,
                     'user_preferences': preferences
                 },
                 'benchmark': preferences.benchmark
             },
-            'metadata': 
+            'metadata':
             {'show_reasoning': show_reasoning,
              'investment_llm_agent': investment_llm_agent,
              'portfolio_llm_agent': portfolio_llm_agent,
              'analyst_llm_agent': analyst_llm_agent
-            }
+             }
         }
     )
 
@@ -75,6 +76,12 @@ def create_workflow():
 
 def main():
     """Entry point for the ai-robo-advisor CLI application."""
+    
+    # --- Metrics Setup ---
+    start_time = time.time()
+    metrics.setup_metrics()
+    # ---------------------
+    
     try:
         parser = argparse.ArgumentParser(description="Run the AI Robo Advisor workflow.")
         parser.add_argument("--show-reasoning", action="store_true", help="Show reasoning from each agent")
@@ -99,11 +106,11 @@ def main():
         preferences = get_user_preferences()
 
         # Run the workflow
-        result = run_workflow( 
+        result = run_workflow(
             show_reasoning=args.show_reasoning,
             investment_llm_agent=investment_llm_agent,
             portfolio_llm_agent=portfolio_llm_agent,
-            analyst_llm_agent=analyst_llm_agent,  # Fixed: was portfolio_llm_agent
+            analyst_llm_agent=analyst_llm_agent,
             preferences=preferences
         )
 
@@ -115,14 +122,31 @@ def main():
         print_portfolio(portfolio)
         print_analysis_response(analysis)
 
+        # --- Record Success Metrics ---
+        metrics.workflow_runs_total.labels(status='success').inc()
+        metrics.workflow_last_run_timestamp.set_to_current_time()
+        # ------------------------------
+        
         return 0  # Success
 
     except KeyboardInterrupt:
         print("\n\n❌ Application interrupted by user")
+        # --- Record Failure Metric ---
+        metrics.workflow_runs_total.labels(status='failure').inc()
+        # -----------------------------
         return 1
     except Exception as e:
         print(f"\n❌ An error occurred: {e}")
+        # --- Record Failure Metric ---
+        metrics.workflow_runs_total.labels(status='failure').inc()
+        # -----------------------------
         return 1
+    finally:
+        # --- Push All Metrics at Exit ---
+        duration = time.time() - start_time
+        metrics.workflow_duration_seconds.observe(duration)
+        metrics.push_metrics()
+        # --------------------------------
 
 
 if __name__ == "__main__":
