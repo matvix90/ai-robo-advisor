@@ -1,15 +1,14 @@
-from graph.state import State
 from data.models import AnalysisAgent
+from graph.state import State
 
 
-def analyze_ter(state:State) -> State:
-  
+def analyze_ter(state: State) -> State:
     llm = state["metadata"]["analyst_llm_agent"]
-    portfolio = state["data"]['portfolio']
+    portfolio = state["data"]["portfolio"]
 
     # Initialize the analysis dictionary if it doesn't exist
-    if 'analysis' not in state['data']:
-        state['data']['analysis'] = {}
+    if "analysis" not in state["data"]:
+        state["data"]["analysis"] = {}
 
     prompt = f"""
     You are a financial data analyst AI specializing in ETF and mutual fund expense analysis.
@@ -63,9 +62,9 @@ def analyze_ter(state:State) -> State:
 
     response = llm.with_structured_output(AnalysisAgent).invoke(prompt)
 
-    if state["metadata"]['show_reasoning']:
+    if state["metadata"]["show_reasoning"]:
         print(response.reasoning)
 
-    state["data"]['analysis']['expense_ratio'] = response
+    state["data"]["analysis"]["expense_ratio"] = response
 
     return state

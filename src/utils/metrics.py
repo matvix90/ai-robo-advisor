@@ -1,7 +1,10 @@
-import pandas as pd
 import numpy as np
+import pandas as pd
 
-def calculate_performance_metrics(price_series: pd.Series, risk_free_rate: float = 0.02) -> dict:
+
+def calculate_performance_metrics(
+    price_series: pd.Series, risk_free_rate: float = 0.02
+) -> dict:
     """
     Calculates absolute performance metrics for a given price series.
 
@@ -26,14 +29,14 @@ def calculate_performance_metrics(price_series: pd.Series, risk_free_rate: float
     num_days = (price_series.index[-1] - price_series.index[0]).days
     if num_days <= 0:
         raise ValueError("Price series must span more than 0 days")
-    
+
     cagr = (1 + cumulative_return) ** (365.0 / num_days) - 1
 
     # Daily Returns and Volatility
     daily_returns = price_series.pct_change().dropna()
     if daily_returns.empty:
         raise ValueError("Unable to calculate daily returns from price series")
-    
+
     annualized_volatility = daily_returns.std() * np.sqrt(252)
 
     # Max Drawdown
@@ -43,22 +46,24 @@ def calculate_performance_metrics(price_series: pd.Series, risk_free_rate: float
     max_drawdown = drawdown.min()
 
     # Sharpe Ratio
-    annualized_return = (1 + daily_returns.mean())**252 - 1
+    annualized_return = (1 + daily_returns.mean()) ** 252 - 1
     if annualized_volatility == 0:
         raise ValueError("Cannot calculate Sharpe ratio: volatility is zero")
-    
+
     sharpe_ratio = (annualized_return - risk_free_rate) / annualized_volatility
 
     return {
-        'Cumulative Return': round(cumulative_return, 4),
-        'CAGR': round(cagr, 4),
-        'Annualized Volatility': round(annualized_volatility, 4),
-        'Max Drawdown': round(max_drawdown, 4),
-        'Sharpe Ratio': round(sharpe_ratio, 4),
+        "Cumulative Return": round(cumulative_return, 4),
+        "CAGR": round(cagr, 4),
+        "Annualized Volatility": round(annualized_volatility, 4),
+        "Max Drawdown": round(max_drawdown, 4),
+        "Sharpe Ratio": round(sharpe_ratio, 4),
     }
 
 
-def calculate_relative_metrics(asset_returns: pd.Series, benchmark_returns: pd.Series, risk_free_rate: float = 0.02) -> dict:
+def calculate_relative_metrics(
+    asset_returns: pd.Series, benchmark_returns: pd.Series, risk_free_rate: float = 0.02
+) -> dict:
     """
     Calculates Alpha and Beta relative to a benchmark.
 
@@ -71,31 +76,38 @@ def calculate_relative_metrics(asset_returns: pd.Series, benchmark_returns: pd.S
         dict: A dictionary containing Alpha and Beta.
     """
     # Align returns and drop any non-overlapping dates
-    df = pd.DataFrame({'asset': asset_returns, 'benchmark': benchmark_returns}).dropna()
+    df = pd.DataFrame({"asset": asset_returns, "benchmark": benchmark_returns}).dropna()
     if len(df) < 2:
-        raise ValueError("Insufficient overlapping data between asset and benchmark returns")
+        raise ValueError(
+            "Insufficient overlapping data between asset and benchmark returns"
+        )
 
     # Beta
-    covariance = df['asset'].cov(df['benchmark'])
-    benchmark_variance = df['benchmark'].var()
+    covariance = df["asset"].cov(df["benchmark"])
+    benchmark_variance = df["benchmark"].var()
     if benchmark_variance == 0:
         raise ValueError("Cannot calculate Beta: benchmark variance is zero")
-    
+
     beta = covariance / benchmark_variance
 
     # Alpha
-    asset_annual_return = (1 + df['asset'].mean())**252 - 1
-    benchmark_annual_return = (1 + df['benchmark'].mean())**252 - 1
+    asset_annual_return = (1 + df["asset"].mean()) ** 252 - 1
+    benchmark_annual_return = (1 + df["benchmark"].mean()) ** 252 - 1
     expected_return = risk_free_rate + beta * (benchmark_annual_return - risk_free_rate)
     alpha = asset_annual_return - expected_return
 
     return {
-        'Alpha': round(alpha, 4),
-        'Beta': round(beta, 4),
+        "Alpha": round(alpha, 4),
+        "Beta": round(beta, 4),
     }
 
 
-def analyze_portfolio(tickers_data: dict, benchmark_data: list, weights: dict = None, risk_free_rate: float = 0.02) -> dict:
+def analyze_portfolio(
+    tickers_data: dict,
+    benchmark_data: list,
+    weights: dict = None,
+    risk_free_rate: float = 0.02,
+) -> dict:
     """
     Performs a comprehensive analysis of a portfolio against a benchmark.
 
@@ -110,7 +122,7 @@ def analyze_portfolio(tickers_data: dict, benchmark_data: list, weights: dict = 
     """
     if not tickers_data:
         raise ValueError("tickers_data cannot be empty")
-    
+
     if not benchmark_data:
         raise ValueError("benchmark_data cannot be empty")
 
@@ -120,52 +132,60 @@ def analyze_portfolio(tickers_data: dict, benchmark_data: list, weights: dict = 
         for ticker, data in tickers_data.items():
             if not data:
                 raise ValueError(f"No data provided for ticker: {ticker}")
-            
-            df = pd.DataFrame(data).set_index(pd.to_datetime(pd.DataFrame(data)['date']))
-            if 'close' not in df.columns:
+
+            df = pd.DataFrame(data).set_index(
+                pd.to_datetime(pd.DataFrame(data)["date"])
+            )
+            if "close" not in df.columns:
                 raise ValueError(f"Missing 'close' column for ticker: {ticker}")
-            
-            all_prices[ticker] = df['close']
-        
-        benchmark_df = pd.DataFrame(benchmark_data).set_index(pd.to_datetime(pd.DataFrame(benchmark_data)['date']))
-        if 'close' not in benchmark_df.columns:
+
+            all_prices[ticker] = df["close"]
+
+        benchmark_df = pd.DataFrame(benchmark_data).set_index(
+            pd.to_datetime(pd.DataFrame(benchmark_data)["date"])
+        )
+        if "close" not in benchmark_df.columns:
             raise ValueError("Missing 'close' column in benchmark data")
-        
-        all_prices['benchmark'] = benchmark_df['close']
+
+        all_prices["benchmark"] = benchmark_df["close"]
     except (KeyError, ValueError) as e:
-        raise ValueError(f"Error processing input data: {str(e)}")
+        raise ValueError(f"Error processing input data: {e!s}")
 
     # Align all prices, forward-fill missing values, then drop any remaining NaNs
     prices_df = pd.DataFrame(all_prices).ffill().dropna()
-    
+
     if prices_df.empty:
         raise ValueError("No overlapping data found for the given assets and benchmark")
 
-    benchmark_prices = prices_df['benchmark']
-    ticker_prices = prices_df.drop(columns=['benchmark'])
-    
+    benchmark_prices = prices_df["benchmark"]
+    ticker_prices = prices_df.drop(columns=["benchmark"])
+
     # 2. Calculate Returns
     returns_df = prices_df.pct_change().dropna()
     if returns_df.empty:
         raise ValueError("Unable to calculate returns from price data")
-    
-    benchmark_returns = returns_df['benchmark']
-    ticker_returns = returns_df.drop(columns=['benchmark'])
+
+    benchmark_returns = returns_df["benchmark"]
+    ticker_returns = returns_df.drop(columns=["benchmark"])
 
     # 3. Analyze Benchmark
     analysis_results = {
-        'benchmark': calculate_performance_metrics(benchmark_prices, risk_free_rate)
+        "benchmark": calculate_performance_metrics(benchmark_prices, risk_free_rate)
     }
 
     # 4. Analyze Individual Tickers
-    analysis_results['tickers'] = {}
+    analysis_results["tickers"] = {}
     for ticker in ticker_prices.columns:
         try:
-            perf_metrics = calculate_performance_metrics(ticker_prices[ticker], risk_free_rate)
-            rel_metrics = calculate_relative_metrics(ticker_returns[ticker], benchmark_returns, risk_free_rate)
-            analysis_results['tickers'][ticker] = {**perf_metrics, **rel_metrics}
+            perf_metrics = calculate_performance_metrics(
+                ticker_prices[ticker], risk_free_rate
+            )
+            rel_metrics = calculate_relative_metrics(
+                ticker_returns[ticker], benchmark_returns, risk_free_rate
+            )
+            analysis_results["tickers"][ticker] = {**perf_metrics, **rel_metrics}
         except ValueError as e:
-            raise ValueError(f"Error analyzing ticker {ticker}: {str(e)}")
+            raise ValueError(f"Error analyzing ticker {ticker}: {e!s}")
 
     # 5. Analyze Portfolio
     # Normalize weights
@@ -179,15 +199,24 @@ def analyze_portfolio(tickers_data: dict, benchmark_data: list, weights: dict = 
         weights_array /= weights_array.sum()  # Ensure they sum to 1
 
     portfolio_returns = ticker_returns.dot(weights_array)
-    
+
     # Create a synthetic price series for the portfolio to calculate metrics
-    portfolio_prices = (1 + portfolio_returns).cumprod() * 100  # Start at 100 for simplicity
-    
+    portfolio_prices = (
+        1 + portfolio_returns
+    ).cumprod() * 100  # Start at 100 for simplicity
+
     try:
-        portfolio_perf_metrics = calculate_performance_metrics(portfolio_prices, risk_free_rate)
-        portfolio_rel_metrics = calculate_relative_metrics(portfolio_returns, benchmark_returns, risk_free_rate)
-        analysis_results['portfolio'] = {**portfolio_perf_metrics, **portfolio_rel_metrics}
+        portfolio_perf_metrics = calculate_performance_metrics(
+            portfolio_prices, risk_free_rate
+        )
+        portfolio_rel_metrics = calculate_relative_metrics(
+            portfolio_returns, benchmark_returns, risk_free_rate
+        )
+        analysis_results["portfolio"] = {
+            **portfolio_perf_metrics,
+            **portfolio_rel_metrics,
+        }
     except ValueError as e:
-        raise ValueError(f"Error analyzing portfolio: {str(e)}")
+        raise ValueError(f"Error analyzing portfolio: {e!s}")
 
     return analysis_results

@@ -1,0 +1,98 @@
+services:
+  # Main AI Robo Advisor application
+  ai-robo-advisor:
+    build:
+      context: .
+      dockerfile: docker/Dockerfile
+      target: development
+    container_name: ai-robo-advisor-dev
+    volumes:
+      # Mount source code for hot reloading in development
+      - ./src:/app/src:ro
+      - ./tests:/app/tests:ro
+      - ./pyproject.toml:/app/pyproject.toml:ro
+      - ./pytest.ini:/app/pytest.ini:ro
+      - ./run_tests.sh:/app/run_tests.sh:ro
+    environment:
+      # Environment variables from .env file with defaults
+      - POLYGON_API_KEY=${POLYGON_API_KEY:-}
+      - OPENAI_API_KEY=${OPENAI_API_KEY:-}
+      - ANTHROPIC_API_KEY=${ANTHROPIC_API_KEY:-}
+      - GOOGLE_API_KEY=${GOOGLE_API_KEY:-}
+      # Development specific settings
+      - PYTHONPATH=/app/src
+      - ENVIRONMENT=development
+    env_file:
+      - .env
+    stdin_open: true  # Enable interactive mode
+    tty: true        # Allocate a pseudo-TTY
+    command: python -m main
+    networks:
+      - ai-robo-advisor-network
+    restart: unless-stopped
+
+  # Interactive development container
+  ai-robo-advisor-interactive:
+    build:
+      context: .
+      dockerfile: docker/Dockerfile
+      target: interactive
+    container_name: ai-robo-advisor-interactive
+    volumes:
+      # Mount source code for development
+      - ./src:/app/src
+      - ./tests:/app/tests
+      - ./pyproject.toml:/app/pyproject.toml
+      - ./pytest.ini:/app/pytest.ini
+      - ./run_tests.sh:/app/run_tests.sh
+      # Mount .env for development
+      - ./.env:/app/.env
+    environment:
+      - POLYGON_API_KEY=${POLYGON_API_KEY:-}
+      - OPENAI_API_KEY=${OPENAI_API_KEY:-}
+      - ANTHROPIC_API_KEY=${ANTHROPIC_API_KEY:-}
+      - GOOGLE_API_KEY=${GOOGLE_API_KEY:-}
+      - PYTHONPATH=/app/src
+      - ENVIRONMENT=development
+    env_file:
+      - .env
+    stdin_open: true
+    tty: true
+    command: /bin/bash
+    networks:
+      - ai-robo-advisor-network
+    restart: unless-stopped
+    profiles:
+      - interactive
+
+  # Production-like container
+  ai-robo-advisor-prod:
+    build:
+      context: .
+      dockerfile: docker/Dockerfile
+      target: production
+    container_name: ai-robo-advisor-prod
+    environment:
+      - POLYGON_API_KEY=${POLYGON_API_KEY:-}
+      - OPENAI_API_KEY=${OPENAI_API_KEY:-}
+      - ANTHROPIC_API_KEY=${ANTHROPIC_API_KEY:-}
+      - GOOGLE_API_KEY=${GOOGLE_API_KEY:-}
+      - PYTHONPATH=/app/src
+      - ENVIRONMENT=production
+    env_file:
+      - .env
+    stdin_open: true
+    networks:
+      - ai-robo-advisor-network
+    restart: unless-stopped
+    profiles:
+      - production
+
+networks:
+  ai-robo-advisor-network:
+    driver: bridge
+
+volumes:
+  # Volume for persistent data if needed in the future
+  ai-robo-advisor-data:
+    driver: local

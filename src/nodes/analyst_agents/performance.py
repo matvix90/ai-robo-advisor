@@ -1,30 +1,31 @@
+from data.models import AnalysisAgent, Benchmarks
 from graph.state import State
-from data.models import AnalysisAgent
-from utils.metrics import analyze_portfolio
 from utils.analysis_data import all_data
+from utils.metrics import analyze_portfolio
 
 
-def analyze_performance(state:State) -> State:
-  
+def analyze_performance(state: State) -> State:
     llm = state["metadata"]["analyst_llm_agent"]
-    portfolio = state["data"]['portfolio']
+    portfolio = state["data"]["portfolio"]
     strategy = portfolio.strategy
 
     if state["data"].get("benchmark") is None:
-        state["data"]["benchmark"] = "ACWI"
-        
-    benchmark_ticker = state["data"]["benchmark"]
+        state["data"]["benchmark"] = Benchmarks.ACWI.value
+
+    benchmark = state["data"]["benchmark"]
+
+    # benchmark is now a tuple (ticker, description)
+    benchmark_ticker = benchmark[0]
+    benchmark_description = benchmark[1]
 
     # Initialize the analysis dictionary if it doesn't exist
-    if 'analysis' not in state['data']:
-        state['data']['analysis'] = {}
+    if "analysis" not in state["data"]:
+        state["data"]["analysis"] = {}
 
     portfolio_data, benchmark_data, weights = all_data(portfolio, benchmark_ticker)
 
     metrics = analyze_portfolio(
-        tickers_data=portfolio_data,
-        benchmark_data=benchmark_data,
-        weights=weights
+        tickers_data=portfolio_data, benchmark_data=benchmark_data, weights=weights
     )
 
     portfolio_metric = metrics["portfolio"]
@@ -41,20 +42,22 @@ def analyze_performance(state:State) -> State:
     {portfolio.holdings}
 
     ### PORTFOLIO METRICS:
-    CAGR: {portfolio_metric['CAGR']}
-    Annualized Volatility: {portfolio_metric['Annualized Volatility']}
-    Sharpe Ratio: {portfolio_metric['Sharpe Ratio']}
-    Max Drawdown: {portfolio_metric['Max Drawdown']}
-    Alpha: {portfolio_metric['Alpha']}
-    Beta: {portfolio_metric['Beta']}
+    CAGR: {portfolio_metric["CAGR"]}
+    Annualized Volatility: {portfolio_metric["Annualized Volatility"]}
+    Sharpe Ratio: {portfolio_metric["Sharpe Ratio"]}
+    Max Drawdown: {portfolio_metric["Max Drawdown"]}
+    Alpha: {portfolio_metric["Alpha"]}
+    Beta: {portfolio_metric["Beta"]}
 
-    ## BENCHMARK DATA (ACWI ETF)
+    ## BENCHMARK DATA: 
+    ### Benchmark being used - ({benchmark_ticker})
+    {benchmark_description}
 
-    ### BENCHMARK METRICS (ACWI ETF):
-    CAGR: {benchmark_metric['CAGR']}
-    Annualized Volatility: {benchmark_metric['Annualized Volatility']}
-    Sharpe Ratio: {benchmark_metric['Sharpe Ratio']}
-    Max Drawdown: {benchmark_metric['Max Drawdown']}
+    ### BENCHMARK METRICS for ({benchmark_ticker}):
+    CAGR: {benchmark_metric["CAGR"]}
+    Annualized Volatility: {benchmark_metric["Annualized Volatility"]}
+    Sharpe Ratio: {benchmark_metric["Sharpe Ratio"]}
+    Max Drawdown: {benchmark_metric["Max Drawdown"]}
 
     ## STRATEGY DATA
     ### EXPECTED RETURNS
@@ -95,9 +98,9 @@ def analyze_performance(state:State) -> State:
 
     response = llm.with_structured_output(AnalysisAgent).invoke(prompt)
 
-    if state["metadata"]['show_reasoning']:
+    if state["metadata"]["show_reasoning"]:
         print(response.reasoning)
-    
-    state["data"]['analysis']['performance'] = response
+
+    state["data"]["analysis"]["performance"] = response
 
     return state

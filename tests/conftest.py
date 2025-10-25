@@ -1,26 +1,41 @@
 """
 Pytest configuration and shared fixtures for all tests.
 """
-import pytest
-import pandas as pd
+
+from unittest.mock import Mock
+
 import numpy as np
-from datetime import datetime, timedelta
-from unittest.mock import Mock, MagicMock
+import pandas as pd
+import pytest
 
 from src.data.models import (
-    Portfolio, Holding, Strategy, AssetAllocation, 
-    GeographicalDiversification, SectorDiversification,
-    StockExchange, Region, Sector, RiskProfile,
-    InvestmentGoal, InvestmentHorizon, Currency,
-    PortfolioPreference, InvestmentAgent, InvestmentKnowledge,
-    IncomeLevel, InvestmentPurpose, LiquidityNeed,
-    MarketDownturnReaction, InvestmentPriority
+    AssetAllocation,
+    Currency,
+    GeographicalDiversification,
+    Holding,
+    IncomeLevel,
+    InvestmentAgent,
+    InvestmentGoal,
+    InvestmentHorizon,
+    InvestmentKnowledge,
+    InvestmentPriority,
+    InvestmentPurpose,
+    LiquidityNeed,
+    MarketDownturnReaction,
+    Portfolio,
+    PortfolioPreference,
+    Region,
+    RiskProfile,
+    Sector,
+    SectorDiversification,
+    StockExchange,
+    Strategy,
 )
-
 
 # ============================================================================
 # Data Model Fixtures
 # ============================================================================
+
 
 @pytest.fixture
 def sample_asset_allocation():
@@ -31,7 +46,7 @@ def sample_asset_allocation():
         real_estate_percentage=5.0,
         commodities_percentage=3.0,
         cryptocurrency_percentage=0.0,
-        cash_percentage=2.0
+        cash_percentage=2.0,
     )
 
 
@@ -42,7 +57,7 @@ def sample_geographical_diversification():
         regions=[
             Region(region="North America", weight=50.0),
             Region(region="Europe", weight=30.0),
-            Region(region="Asia", weight=20.0)
+            Region(region="Asia", weight=20.0),
         ]
     )
 
@@ -55,13 +70,17 @@ def sample_sector_diversification():
             Sector(sector="Technology", weight=30.0),
             Sector(sector="Healthcare", weight=20.0),
             Sector(sector="Financial", weight=25.0),
-            Sector(sector="Consumer", weight=25.0)
+            Sector(sector="Consumer", weight=25.0),
         ]
     )
 
 
 @pytest.fixture
-def sample_strategy(sample_asset_allocation, sample_geographical_diversification, sample_sector_diversification):
+def sample_strategy(
+    sample_asset_allocation,
+    sample_geographical_diversification,
+    sample_sector_diversification,
+):
     """Sample investment strategy for testing."""
     return Strategy(
         name="Balanced Growth Strategy",
@@ -72,7 +91,7 @@ def sample_strategy(sample_asset_allocation, sample_geographical_diversification
         stock_exchange=StockExchange.NYSE,
         risk_tolerance="Moderate",
         time_horizon="Long Term (7-15 years)",
-        expected_returns="7-9% annually"
+        expected_returns="7-9% annually",
     )
 
 
@@ -85,22 +104,22 @@ def sample_holdings():
             name="Vanguard Total Stock Market ETF",
             isin="US9229087690",
             asset_class="Stocks",
-            weight=60.0
+            weight=60.0,
         ),
         Holding(
             symbol="BND",
             name="Vanguard Total Bond Market ETF",
             isin="US9219378356",
             asset_class="Bonds",
-            weight=30.0
+            weight=30.0,
         ),
         Holding(
             symbol="VNQ",
             name="Vanguard Real Estate ETF",
             isin="US9229085538",
             asset_class="Real Estate",
-            weight=10.0
-        )
+            weight=10.0,
+        ),
     ]
 
 
@@ -108,9 +127,7 @@ def sample_holdings():
 def sample_portfolio(sample_holdings, sample_strategy):
     """Sample portfolio for testing."""
     return Portfolio(
-        name="Test Portfolio",
-        holdings=sample_holdings,
-        strategy=sample_strategy
+        name="Test Portfolio", holdings=sample_holdings, strategy=sample_strategy
     )
 
 
@@ -138,7 +155,7 @@ def sample_portfolio_preference():
         # Enhanced fields - Risk Assessment
         max_acceptable_loss=20.0,
         market_downturn_reaction=MarketDownturnReaction.HOLD,
-        investment_priority=InvestmentPriority.GROWTH
+        investment_priority=InvestmentPriority.GROWTH,
     )
 
 
@@ -147,7 +164,7 @@ def sample_investment_agent(sample_strategy):
     """Sample investment agent for testing."""
     return InvestmentAgent(
         strategy=sample_strategy,
-        reasoning="This is a test reasoning for the investment strategy."
+        reasoning="This is a test reasoning for the investment strategy.",
     )
 
 
@@ -155,35 +172,37 @@ def sample_investment_agent(sample_strategy):
 # State Fixtures
 # ============================================================================
 
+
 @pytest.fixture
 def sample_state(sample_portfolio_preference):
     """Sample workflow state for testing."""
     return {
-        'data': {
-            'investment': {
-                'analyst': None,
-                'user_preferences': sample_portfolio_preference
+        "data": {
+            "investment": {
+                "analyst": None,
+                "user_preferences": sample_portfolio_preference,
             }
         },
-        'metadata': {
-            'show_reasoning': False,
-            'investment_llm_agent': None,
-            'portfolio_llm_agent': None,
-            'analyst_llm_agent': None
-        }
+        "metadata": {
+            "show_reasoning": False,
+            "investment_llm_agent": None,
+            "portfolio_llm_agent": None,
+            "analyst_llm_agent": None,
+        },
     }
 
 
 @pytest.fixture
 def sample_state_with_portfolio(sample_state, sample_portfolio):
     """Sample workflow state with portfolio for testing."""
-    sample_state['data']['portfolio'] = sample_portfolio
+    sample_state["data"]["portfolio"] = sample_portfolio
     return sample_state
 
 
 # ============================================================================
 # Mock LLM Fixtures
 # ============================================================================
+
 
 @pytest.fixture
 def mock_llm():
@@ -205,10 +224,11 @@ def mock_llm_with_strategy_response(mock_llm, sample_investment_agent):
 # Data Generation Fixtures
 # ============================================================================
 
+
 @pytest.fixture
 def sample_price_series():
     """Generate sample price series for testing metrics."""
-    dates = pd.date_range(start='2020-01-01', end='2023-12-31', freq='D')
+    dates = pd.date_range(start="2020-01-01", end="2023-12-31", freq="D")
     # Generate realistic price data with some volatility
     np.random.seed(42)
     returns = np.random.normal(0.0005, 0.01, len(dates))
@@ -219,7 +239,7 @@ def sample_price_series():
 @pytest.fixture
 def sample_benchmark_series():
     """Generate sample benchmark price series for testing."""
-    dates = pd.date_range(start='2020-01-01', end='2023-12-31', freq='D')
+    dates = pd.date_range(start="2020-01-01", end="2023-12-31", freq="D")
     np.random.seed(24)
     returns = np.random.normal(0.0004, 0.008, len(dates))
     prices = 100 * (1 + returns).cumprod()
@@ -229,10 +249,10 @@ def sample_benchmark_series():
 @pytest.fixture
 def sample_ohlcv_data():
     """Generate sample OHLCV data for polygon API testing."""
-    dates = pd.date_range(start='2023-01-01', end='2023-12-31', freq='D')
+    dates = pd.date_range(start="2023-01-01", end="2023-12-31", freq="D")
     data = []
     price = 100.0
-    
+
     for date in dates:
         daily_return = np.random.normal(0.0005, 0.01)
         close = price * (1 + daily_return)
@@ -240,18 +260,20 @@ def sample_ohlcv_data():
         low = close * (1 - abs(np.random.normal(0, 0.005)))
         open_price = (high + low) / 2
         volume = np.random.randint(1000000, 10000000)
-        
-        data.append({
-            'date': date.strftime('%Y-%m-%d %H:%M:%S'),
-            'open': round(open_price, 2),
-            'high': round(high, 2),
-            'low': round(low, 2),
-            'close': round(close, 2),
-            'volume': volume
-        })
-        
+
+        data.append(
+            {
+                "date": date.strftime("%Y-%m-%d %H:%M:%S"),
+                "open": round(open_price, 2),
+                "high": round(high, 2),
+                "low": round(low, 2),
+                "close": round(close, 2),
+                "volume": volume,
+            }
+        )
+
         price = close
-    
+
     return data
 
 
@@ -259,15 +281,16 @@ def sample_ohlcv_data():
 def sample_tickers_data(sample_ohlcv_data):
     """Generate sample tickers data dictionary."""
     return {
-        'VTI': sample_ohlcv_data[:200],
-        'BND': sample_ohlcv_data[:200],
-        'VNQ': sample_ohlcv_data[:200]
+        "VTI": sample_ohlcv_data[:200],
+        "BND": sample_ohlcv_data[:200],
+        "VNQ": sample_ohlcv_data[:200],
     }
 
 
 # ============================================================================
 # Environment Fixtures
 # ============================================================================
+
 
 @pytest.fixture
 def mock_env_vars(monkeypatch):
@@ -281,6 +304,7 @@ def mock_env_vars(monkeypatch):
 # ============================================================================
 # Helper Functions
 # ============================================================================
+
 
 def create_mock_llm_response(model_class, **kwargs):
     """Helper to create mock LLM responses."""

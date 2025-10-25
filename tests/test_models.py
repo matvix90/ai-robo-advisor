@@ -1,22 +1,40 @@
 """
 Tests for data models defined in src/data/models.py
 """
+
 import pytest
-from pydantic import ValidationError
 
 from src.data.models import (
-    Portfolio, Holding, Strategy, AssetAllocation, GeographicalDiversification,
-    SectorDiversification, StockExchange, Region, Sector, Currency,
-    RiskProfile, InvestmentGoal, InvestmentHorizon, PortfolioPreference,
-    InvestmentAgent, PortfolioAgent, AnalysisAgent, Status, AnalysisResponse,
-    InvestmentKnowledge, IncomeLevel, InvestmentPurpose, LiquidityNeed,
-    MarketDownturnReaction, InvestmentPriority
+    AnalysisAgent,
+    AnalysisResponse,
+    AssetAllocation,
+    Currency,
+    GeographicalDiversification,
+    Holding,
+    IncomeLevel,
+    InvestmentGoal,
+    InvestmentHorizon,
+    InvestmentKnowledge,
+    InvestmentPriority,
+    InvestmentPurpose,
+    LiquidityNeed,
+    MarketDownturnReaction,
+    Portfolio,
+    PortfolioAgent,
+    PortfolioPreference,
+    Region,
+    RiskProfile,
+    Sector,
+    SectorDiversification,
+    Status,
+    StockExchange,
+    Strategy,
 )
-
 
 # ============================================================================
 # Asset Allocation Tests
 # ============================================================================
+
 
 @pytest.mark.unit
 class TestAssetAllocation:
@@ -30,7 +48,7 @@ class TestAssetAllocation:
             real_estate_percentage=5.0,
             commodities_percentage=5.0,
             cryptocurrency_percentage=3.0,
-            cash_percentage=2.0
+            cash_percentage=2.0,
         )
         assert allocation.stocks_percentage == 60.0
         assert allocation.bonds_percentage == 25.0
@@ -38,10 +56,7 @@ class TestAssetAllocation:
 
     def test_create_asset_allocation_partial_fields(self):
         """Test creating asset allocation with only some fields."""
-        allocation = AssetAllocation(
-            stocks_percentage=70.0,
-            bonds_percentage=30.0
-        )
+        allocation = AssetAllocation(stocks_percentage=70.0, bonds_percentage=30.0)
         assert allocation.stocks_percentage == 70.0
         assert allocation.bonds_percentage == 30.0
         assert allocation.real_estate_percentage is None
@@ -56,6 +71,7 @@ class TestAssetAllocation:
 # ============================================================================
 # Geographical and Sector Diversification Tests
 # ============================================================================
+
 
 @pytest.mark.unit
 class TestDiversification:
@@ -72,7 +88,7 @@ class TestDiversification:
         regions = [
             Region(region="North America", weight=50.0),
             Region(region="Europe", weight=30.0),
-            Region(region="Asia", weight=20.0)
+            Region(region="Asia", weight=20.0),
         ]
         geo_div = GeographicalDiversification(regions=regions)
         assert len(geo_div.regions) == 3
@@ -89,7 +105,7 @@ class TestDiversification:
         sectors = [
             Sector(sector="Technology", weight=40.0),
             Sector(sector="Healthcare", weight=30.0),
-            Sector(sector="Finance", weight=30.0)
+            Sector(sector="Finance", weight=30.0),
         ]
         sector_div = SectorDiversification(sectors=sectors)
         assert len(sector_div.sectors) == 3
@@ -99,6 +115,7 @@ class TestDiversification:
 # ============================================================================
 # Strategy Tests
 # ============================================================================
+
 
 @pytest.mark.unit
 class TestStrategy:
@@ -114,9 +131,12 @@ class TestStrategy:
         assert sample_strategy.stock_exchange == StockExchange.NYSE
         assert sample_strategy.risk_tolerance == "Moderate"
 
-    def test_strategy_with_different_stock_exchange(self, sample_asset_allocation, 
-                                                     sample_geographical_diversification,
-                                                     sample_sector_diversification):
+    def test_strategy_with_different_stock_exchange(
+        self,
+        sample_asset_allocation,
+        sample_geographical_diversification,
+        sample_sector_diversification,
+    ):
         """Test creating strategy with different stock exchange."""
         strategy = Strategy(
             name="European Strategy",
@@ -127,7 +147,7 @@ class TestStrategy:
             stock_exchange=StockExchange.EURONEXT,
             risk_tolerance="Aggressive",
             time_horizon="Medium Term",
-            expected_returns="10-12%"
+            expected_returns="10-12%",
         )
         assert strategy.stock_exchange == StockExchange.EURONEXT
 
@@ -135,6 +155,7 @@ class TestStrategy:
 # ============================================================================
 # Holding Tests
 # ============================================================================
+
 
 @pytest.mark.unit
 class TestHolding:
@@ -147,7 +168,7 @@ class TestHolding:
             name="Vanguard Total Stock Market ETF",
             isin="US9229087690",
             asset_class="Stocks",
-            weight=60.0
+            weight=60.0,
         )
         assert holding.symbol == "VTI"
         assert holding.name == "Vanguard Total Stock Market ETF"
@@ -164,7 +185,7 @@ class TestHolding:
             name="Vanguard Total Stock Market ETF",
             isin="TOOLONG12345",  # More than 12 characters
             asset_class="Stocks",
-            weight=60.0
+            weight=60.0,
         )
         # If validation were strict, this would raise ValidationError
         # For now, we just check it doesn't crash
@@ -177,7 +198,7 @@ class TestHolding:
             name="Vanguard Total Stock Market ETF",
             isin="US9229087690",
             asset_class="Stocks",
-            weight=60.0
+            weight=60.0,
         )
         assert isinstance(holding.weight, float)
 
@@ -185,6 +206,7 @@ class TestHolding:
 # ============================================================================
 # Portfolio Tests
 # ============================================================================
+
 
 @pytest.mark.unit
 class TestPortfolio:
@@ -200,9 +222,7 @@ class TestPortfolio:
     def test_portfolio_holdings_weight_sum(self, sample_holdings, sample_strategy):
         """Test that portfolio holdings weights sum to 100."""
         portfolio = Portfolio(
-            name="Test Portfolio",
-            holdings=sample_holdings,
-            strategy=sample_strategy
+            name="Test Portfolio", holdings=sample_holdings, strategy=sample_strategy
         )
         total_weight = sum(holding.weight for holding in portfolio.holdings)
         assert total_weight == 100.0
@@ -215,13 +235,11 @@ class TestPortfolio:
                 name="Vanguard Total Stock Market ETF",
                 isin="US9229087690",
                 asset_class="Stocks",
-                weight=100.0
+                weight=100.0,
             )
         ]
         portfolio = Portfolio(
-            name="Single Holding Portfolio",
-            holdings=holdings,
-            strategy=sample_strategy
+            name="Single Holding Portfolio", holdings=holdings, strategy=sample_strategy
         )
         assert len(portfolio.holdings) == 1
         assert portfolio.holdings[0].weight == 100.0
@@ -231,6 +249,7 @@ class TestPortfolio:
 # Portfolio Preference Tests
 # ============================================================================
 
+
 @pytest.mark.unit
 class TestPortfolioPreference:
     """Tests for PortfolioPreference model."""
@@ -239,7 +258,10 @@ class TestPortfolioPreference:
         """Test creating portfolio preference."""
         assert sample_portfolio_preference.goal == InvestmentGoal.WEALTH_BUILDING
         assert sample_portfolio_preference.risk_profile == RiskProfile.MODERATE
-        assert sample_portfolio_preference.investment_horizon == InvestmentHorizon.LONG_TERM
+        assert (
+            sample_portfolio_preference.investment_horizon
+            == InvestmentHorizon.LONG_TERM
+        )
         assert sample_portfolio_preference.currency == Currency.USD
         assert sample_portfolio_preference.initial_investment == 10000.0
 
@@ -266,7 +288,7 @@ class TestPortfolioPreference:
             # Enhanced fields - Risk Assessment
             max_acceptable_loss=10.0,
             market_downturn_reaction=MarketDownturnReaction.HOLD,
-            investment_priority=InvestmentPriority.STABILITY
+            investment_priority=InvestmentPriority.STABILITY,
         )
         assert pref.goal == InvestmentGoal.RETIREMENT
         assert pref.currency == Currency.EUR
@@ -276,6 +298,7 @@ class TestPortfolioPreference:
 # ============================================================================
 # Agent Models Tests
 # ============================================================================
+
 
 @pytest.mark.unit
 class TestAgentModels:
@@ -290,8 +313,7 @@ class TestAgentModels:
     def test_create_portfolio_agent(self, sample_portfolio):
         """Test creating portfolio agent."""
         agent = PortfolioAgent(
-            portfolio=sample_portfolio,
-            reasoning="This portfolio is well-diversified."
+            portfolio=sample_portfolio, reasoning="This portfolio is well-diversified."
         )
         assert agent.portfolio.name == "Test Portfolio"
         assert agent.reasoning == "This portfolio is well-diversified."
@@ -300,9 +322,7 @@ class TestAgentModels:
         """Test creating analysis agent."""
         status = Status(key="is_performing", value=True)
         agent = AnalysisAgent(
-            status=status,
-            reasoning="Portfolio is performing well.",
-            advices=[]
+            status=status, reasoning="Portfolio is performing well.", advices=[]
         )
         assert agent.status.key == "is_performing"
         assert agent.status.value is True
@@ -316,8 +336,8 @@ class TestAgentModels:
             reasoning="Portfolio lacks diversification.",
             advices=[
                 "Consider adding international exposure",
-                "Increase bond allocation"
-            ]
+                "Increase bond allocation",
+            ],
         )
         assert agent.status.value is False
         assert len(agent.advices) == 2
@@ -326,6 +346,7 @@ class TestAgentModels:
 # ============================================================================
 # Analysis Response Tests
 # ============================================================================
+
 
 @pytest.mark.unit
 class TestAnalysisResponse:
@@ -338,7 +359,7 @@ class TestAnalysisResponse:
             strengths="Well diversified, low fees",
             weeknesses="Slightly high risk",
             overall_assessment="Excellent portfolio for long-term growth",
-            advices=None
+            advices=None,
         )
         assert response.is_approved is True
         assert response.strengths is not None
@@ -351,7 +372,7 @@ class TestAnalysisResponse:
             strengths="Low fees",
             weeknesses="Poor diversification, high risk",
             overall_assessment="Needs significant improvement",
-            advices="Rebalance portfolio, add bonds"
+            advices="Rebalance portfolio, add bonds",
         )
         assert response.is_approved is False
         assert response.advices is not None
@@ -360,6 +381,7 @@ class TestAnalysisResponse:
 # ============================================================================
 # Enum Tests
 # ============================================================================
+
 
 @pytest.mark.unit
 class TestEnums:

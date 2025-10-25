@@ -38,6 +38,7 @@ def print_portfolio(portfolio: Portfolio) -> None:
         console.print("[red]No holdings found in portfolio.[/red]")
 
 
+
 def print_strategy(strategy: Strategy) -> None:
     if not strategy:
         console.print("[bold red]No strategy to display[/bold red]")
