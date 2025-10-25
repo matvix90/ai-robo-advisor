@@ -14,6 +14,7 @@ NC='\033[0m' # No Color
 TEST_TYPE="all"
 COVERAGE=true
 VERBOSE=false
+LINT=true
 MARKERS=""
 SPECIFIC_FILE=""
 
@@ -43,6 +44,10 @@ while [[ $# -gt 0 ]]; do
             COVERAGE=false
             shift
             ;;
+        --no-lint)
+            LINT=false
+            shift
+            ;;
         --file)
             SPECIFIC_FILE="$2"
             shift 2
@@ -56,13 +61,15 @@ while [[ $# -gt 0 ]]; do
             echo "  -f, --fast          Run only fast tests (exclude slow)"
             echo "  -v, --verbose       Verbose output"
             echo "  --no-cov            Skip coverage reporting"
+            echo "  --no-lint           Skip code linting with ruff"
             echo "  --file FILE         Run specific test file"
             echo "  -h, --help          Show this help message"
             echo ""
             echo "Examples:"
-            echo "  ./run_tests.sh                      # Run all tests with coverage"
+            echo "  ./run_tests.sh                      # Run all tests with coverage and linting"
             echo "  ./run_tests.sh -u                   # Run only unit tests"
             echo "  ./run_tests.sh -v                   # Run with verbose output"
+            echo "  ./run_tests.sh --no-lint            # Run tests without linting"
             echo "  ./run_tests.sh --file test_models.py  # Run specific file"
             exit 0
             ;;
@@ -84,6 +91,37 @@ if ! python -m pytest --version &> /dev/null; then
     echo -e "${RED}Error: pytest is not installed${NC}"
     echo "Install test dependencies with: pip install -e \".[test]\""
     exit 1
+fi
+
+# Check if ruff is installed (if linting is enabled)
+if [ "$LINT" = true ] && ! python -m ruff --version &> /dev/null; then
+    echo -e "${RED}Error: ruff is not installed${NC}"
+    echo "Install test dependencies with: pip install -e \".[test]\""
+    exit 1
+fi
+
+# Run linting if enabled
+if [ "$LINT" = true ]; then
+    echo -e "${YELLOW}Running code linting with ruff...${NC}"
+    echo ""
+    
+    # Run ruff check (same as CI)
+    echo -e "${YELLOW}Running ruff check...${NC}"
+    if ! ruff check src tests --select=F,E9,W6 --ignore=F841; then
+        echo -e "${RED}✗ Ruff check failed${NC}"
+        exit 1
+    fi
+    
+    # Run ruff format check (same as CI)
+    echo -e "${YELLOW}Running ruff format check...${NC}"
+    if ! ruff format --check src tests; then
+        echo -e "${RED}✗ Ruff format check failed${NC}"
+        echo -e "${YELLOW}Tip: Run 'ruff format src tests' to fix formatting${NC}"
+        exit 1
+    fi
+    
+    echo -e "${GREEN}✓ Code linting passed!${NC}"
+    echo ""
 fi
 
 # Build pytest command

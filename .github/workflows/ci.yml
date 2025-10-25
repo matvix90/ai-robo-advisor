@@ -40,17 +40,22 @@ jobs:
         python -m pip install --upgrade pip
         pip install -e ".[test]"
 
+    - name: Lint with ruff
+      run: |
+        ruff check src tests --select=F,E9,W6 --ignore=F841
+        ruff format --check src tests
+
     - name: Run unit tests
       run: |
-        python -m pytest tests/ -m "unit" -v --cov=src --cov-report=xml --cov-report=term-missing
+        python -m pytest -m "unit" --cov-report=xml
 
     - name: Run integration tests
       run: |
-        python -m pytest tests/ -m "integration" -v --cov=src --cov-append --cov-report=xml --cov-report=term-missing
+        python -m pytest -m "integration" --cov-append --cov-report=xml
 
     - name: Check test coverage threshold
       run: |
-        python -m pytest tests/ --cov=src --cov-fail-under=70
+        python -m pytest --cov-fail-under=70
 
     - name: Upload coverage to Codecov
       uses: codecov/codecov-action@v4

@@ -2,17 +2,16 @@ services:
   # Main AI Robo Advisor application
   ai-robo-advisor:
     build:
-      context: .
+      context: ..
       dockerfile: docker/Dockerfile
       target: development
     container_name: ai-robo-advisor-dev
     volumes:
       # Mount source code for hot reloading in development
-      - ./src:/app/src:ro
-      - ./tests:/app/tests:ro
-      - ./pyproject.toml:/app/pyproject.toml:ro
-      - ./pytest.ini:/app/pytest.ini:ro
-      - ./run_tests.sh:/app/run_tests.sh:ro
+      - ../src:/app/src:ro
+      - ../tests:/app/tests:ro
+      - ../pyproject.toml:/app/pyproject.toml:ro
+      - ../run_tests.sh:/app/run_tests.sh:ro
     environment:
       # Environment variables from .env file with defaults
       - POLYGON_API_KEY=${POLYGON_API_KEY:-}
@@ -23,7 +22,7 @@ services:
       - PYTHONPATH=/app/src
       - ENVIRONMENT=development
     env_file:
-      - .env
+      - ../.env
     stdin_open: true  # Enable interactive mode
     tty: true        # Allocate a pseudo-TTY
     command: python -m main
@@ -34,19 +33,18 @@ services:
   # Interactive development container
   ai-robo-advisor-interactive:
     build:
-      context: .
+      context: ..
       dockerfile: docker/Dockerfile
       target: interactive
     container_name: ai-robo-advisor-interactive
     volumes:
       # Mount source code for development
-      - ./src:/app/src
-      - ./tests:/app/tests
-      - ./pyproject.toml:/app/pyproject.toml
-      - ./pytest.ini:/app/pytest.ini
-      - ./run_tests.sh:/app/run_tests.sh
+      - ../src:/app/src
+      - ../tests:/app/tests
+      - ../pyproject.toml:/app/pyproject.toml
+      - ../run_tests.sh:/app/run_tests.sh
       # Mount .env for development
-      - ./.env:/app/.env
+      - ../.env:/app/.env
     environment:
       - POLYGON_API_KEY=${POLYGON_API_KEY:-}
       - OPENAI_API_KEY=${OPENAI_API_KEY:-}
@@ -55,7 +53,7 @@ services:
       - PYTHONPATH=/app/src
       - ENVIRONMENT=development
     env_file:
-      - .env
+      - ../.env
     stdin_open: true
     tty: true
     command: /bin/bash
@@ -68,7 +66,7 @@ services:
   # Production-like container
   ai-robo-advisor-prod:
     build:
-      context: .
+      context: ..
       dockerfile: docker/Dockerfile
       target: production
     container_name: ai-robo-advisor-prod
@@ -80,7 +78,7 @@ services:
       - PYTHONPATH=/app/src
       - ENVIRONMENT=production
     env_file:
-      - .env
+      - ../.env
     stdin_open: true
     networks:
       - ai-robo-advisor-network

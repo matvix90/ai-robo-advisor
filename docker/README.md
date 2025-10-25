@@ -7,10 +7,10 @@ This directory contains all Docker-related configurations for the AI Robo Adviso
 ```
 docker/
 ├── README.md              # This guide
-├── Dockerfile             # Multi-stage build configuration
-├── docker-helper.sh       # Management script for common operations
-├── validate-setup.sh      # Setup validation and verification script
-└── .env.docker           # Docker-specific environment template
+├── Dockerfile             # Multi-stage build configuration  
+├── docker-compose.yml     # Multi-service orchestration
+├── .dockerignore          # Files excluded from build context
+└── validate-setup.sh      # Setup validation and verification script
 ```
 
 ## 🚀 Quick Start
@@ -18,6 +18,26 @@ docker/
 ### Prerequisites
 - Docker and Docker Compose installed
 - Git repository cloned
+
+### From Project Root
+```bash
+# Start development environment
+./docker-run.sh
+
+# Or specific commands
+./docker-run.sh up --build
+./docker-run.sh down
+./docker-run.sh logs -f
+```
+
+### From Docker Directory
+```bash
+cd docker/
+# Start development environment
+../docker-run.sh
+# Or use docker-compose directly
+docker-compose up --build    # or docker compose up --build
+```
 
 ### 1. Initial Setup
 ```bash
@@ -107,20 +127,16 @@ docker-compose logs -f
 docker-compose run --rm ai-robo-advisor python -m main --help
 ```
 
-### Using Helper Script
+### Using Docker-Run Script (Recommended)
 ```bash
-# Make executable (first time only)
-chmod +x docker/docker-helper.sh
-
-# Common operations
-./docker/docker-helper.sh up              # Start development
-./docker/docker-helper.sh interactive     # Interactive shell
-./docker/docker-helper.sh test           # Run tests
-./docker/docker-helper.sh shell          # Shell in running container
-./docker/docker-helper.sh down           # Stop containers
-./docker/docker-helper.sh clean          # Clean up everything
-./docker/docker-helper.sh status         # Show status
-./docker/docker-helper.sh help           # Show all commands
+# From project root (recommended)
+../docker-run.sh                     # Start development
+../docker-run.sh interactive         # Interactive shell
+../docker-run.sh test               # Run tests
+../docker-run.sh shell              # Shell in running container
+../docker-run.sh down               # Stop containers
+../docker-run.sh clean              # Clean up everything
+../docker-run.sh help               # Show all commands
 ```
 
 ## 🔐 Environment Variables

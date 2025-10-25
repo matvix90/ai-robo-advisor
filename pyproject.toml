@@ -43,6 +43,7 @@ test = [
     "pytest-cov>=4.0.0",
     "pytest-mock>=3.12.0",
     "pytest-asyncio>=0.21.0",
+    "ruff>=0.8.0,<1.0",
 ]
 
 [project.urls]
@@ -96,3 +97,46 @@ line-ending = "auto"
 [tool.ruff.lint.per-file-ignores]
 "tests/**/*" = ["S101"]  # Allow asserts in tests
 "src/main.py" = ["T201"]  # Allow prints in main entry point
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+python_files = ["test_*.py", "*_test.py"]
+python_classes = ["Test*", "*Tests"]
+python_functions = ["test_*"]
+addopts = [
+    "-v",
+    "--strict-markers",
+    "--tb=short",
+    "--cov=src",
+    "--cov-report=term-missing",
+    "--cov-report=html",
+    "--cov-report=xml",
+    "--cov-branch",
+]
+markers = [
+    "unit: Unit tests for individual components",
+    "integration: Integration tests that test multiple components together", 
+    "llm: Tests that involve LLM interactions (may require API keys)",
+    "slow: Tests that take a long time to run",
+    "api: Tests that make external API calls",
+]
+
+[tool.coverage.run]
+source = ["src"]
+omit = [
+    "*/tests/*",
+    "*/test_*",
+    "*/__pycache__/*",
+    "*/site-packages/*",
+]
+
+[tool.coverage.report]
+exclude_lines = [
+    "pragma: no cover",
+    "def __repr__",
+    "raise AssertionError", 
+    "raise NotImplementedError",
+    "if __name__ == .__main__.:",
+    "if TYPE_CHECKING:",
+    "@abstractmethod",
+]
