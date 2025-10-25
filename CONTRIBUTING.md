@@ -21,6 +21,7 @@ Thank you for your interest in contributing to the AI Robo Advisor project! We w
 
 
 
+<a id="how-to-contribute"></a>
 
 ## How to Contribute
 
@@ -37,6 +38,8 @@ Contributions are what make the open-source community such an amazing place to l
 - 🔧 **DevOps**: Improve CI/CD, Docker, deployment processes
 - 🌍 **Localization**: Add multi-language support
 
+<a id="hacktoberfest-guidelines"></a>
+
 ##  Hacktoberfest Guidelines
 
 **For contributors participating in Hacktoberfest:**
@@ -49,6 +52,8 @@ Please read our detailed Hacktoberfest guidelines and contribution rules:
 - No spam or low-quality contributions
 - Focus on priority features listed below
 - Follow all guidelines in this document
+
+<a id="getting-started"></a>
 
 ##  Getting Started
 
@@ -98,6 +103,7 @@ Please read our detailed Hacktoberfest guidelines and contribution rules:
    # Run the test suite
    python -m pytest tests/
    ```
+<a id="development-workflow"></a>
 
 ##  Development Workflow
 
@@ -193,6 +199,8 @@ python -m pytest tests/test_nodes.py -k "test_portfolio"
 # Run the application to ensure it works
 run-advisor --show-reasoning
 ```
+
+<a id="creating-quality-pull-requests"></a>
 
 ##  Creating Quality Pull Requests
 
@@ -467,6 +475,8 @@ python -m pytest tests/ --cov=src --cov-report=term-missing
 
 ---
 
+<a id="code-standards"></a>
+
 ##  Code Standards
 
 ### Python Style Guidelines
@@ -528,6 +538,7 @@ def validate_portfolio(data: dict):
         if field not in data:
             raise ValueError(f"Missing: {field}")
 ```
+<a id="testing-guidelines"></a>
 
 ##  Testing Guidelines
 
@@ -618,6 +629,9 @@ class TestFeatureIntegration:
 - Skip testing error conditions
 - Write overly complex tests
 
+
+<a id="documentation-requirements"></a>
+
 ##  Documentation Requirements
 
 **All code must include proper documentation:**
@@ -626,6 +640,9 @@ class TestFeatureIntegration:
 - **Classes**: Document purpose, attributes, and usage patterns  
 - **README**: Update for new features and installation requirements
 - **API**: Document public methods with types and examples
+
+
+<a id="security-guidelines"></a>
 
 ##  Security Guidelines
 
@@ -656,7 +673,7 @@ def validate_input(data: dict):
 - ❌ Never commit secrets to git
 - ❌ Never trust user input without validation
 
-
+<a id="thank-you"></a>
 
 ## Thank You 
 
@@ -668,6 +685,8 @@ All contributors are recognized in our:
 - GitHub contributors list
 - Release notes for significant contributions
 - Special mentions for innovative features or major improvements
+
+<a id="community"></a>
 
 ### Community
 
