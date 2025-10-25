@@ -1,10 +1,10 @@
 from datetime import datetime, timedelta
-from typing import List, Dict
+from typing import List, Dict, Optional, Tuple
 from decouple import config
 import pytz
 from concurrent.futures import ThreadPoolExecutor, as_completed
+import time
 
-# Polygon.io integration
 try:
     from polygon import RESTClient
     POLYGON_API_KEY = config("POLYGON_API_KEY", default=None, cast=str) 
@@ -14,6 +14,10 @@ except ImportError:
     POLYGON_AVAILABLE = False
     print("Polygon.io client not available. Ensure 'polygon' package is installed and POLYGON_API_KEY is set.")
 
+MAX_RETRIES = 3
+INITIAL_RETRY_DELAY = 1  
+RETRY_BACKOFF_FACTOR = 2
+
 
 def fetch_histories_concurrently(
     tickers: List[str],
@@ -22,7 +26,7 @@ def fetch_histories_concurrently(
     end_date: str
 ) -> Dict[str, List[Dict]]:
     """
-    Fetches historical data for multiple tickers concurrently.
+    Fetches historical data for multiple tickers concurrently with retry logic.
 
     Args:
         tickers (List[str]): A list of stock ticker symbols (portfolio + benchmark).
@@ -32,17 +36,17 @@ def fetch_histories_concurrently(
 
     Returns:
         Dict[str, List[Dict]]: A dictionary mapping each ticker to its historical data.
+            Only includes tickers with successfully fetched data.
     """
     if not POLYGON_AVAILABLE:
         return {}
 
     histories = {}
-    # Note: Polygon.io's free plan has a rate limit of 5 API calls per minute.
-    # For larger portfolios on a free plan, you may need to add delays or
-    # reduce the number of workers.
+    failed_tickers = []
+    
     with ThreadPoolExecutor(max_workers=5) as executor:
         future_to_ticker = {
-            executor.submit(get_stock_history, ticker, timespan, start_date, end_date): ticker
+            executor.submit(get_stock_history_with_retry, ticker, timespan, start_date, end_date): ticker
             for ticker in tickers
         }
 
@@ -52,10 +56,58 @@ def fetch_histories_concurrently(
                 result = future.result()
                 if result:
                     histories[ticker] = result
+                else:
+                    failed_tickers.append(ticker)
             except Exception as exc:
-                print(f'Ticker {ticker} generated an exception during concurrent fetch: {exc}')
+                failed_tickers.append(ticker)
 
     return histories
+
+
+def get_stock_history_with_retry(
+    symbol: str, 
+    timespan: str, 
+    start_date: str, 
+    end_date: str,
+    max_retries: int = MAX_RETRIES
+) -> List[Dict]:
+    """
+    Fetch historical stock prices with retry logic and exponential backoff.
+    
+    Args:
+        symbol: Stock symbol
+        timespan: The size of the time window (e.g., 'day', 'hour')
+        start_date: Start date for history (YYYY-MM-DD)
+        end_date: End date for history (YYYY-MM-DD)
+        max_retries: Maximum number of retry attempts
+        
+    Returns:
+        list: List of historical prices, empty list if all retries fail
+    """
+    if not POLYGON_AVAILABLE:
+        return []
+    
+    for attempt in range(max_retries):
+        try:
+            result = get_stock_history(symbol, timespan, start_date, end_date)
+            if result:
+                return result
+            
+            # If empty result and not last attempt, retry
+            if attempt < max_retries - 1:
+                delay = INITIAL_RETRY_DELAY * (RETRY_BACKOFF_FACTOR ** attempt)
+                time.sleep(delay)
+                
+        except Exception as e:
+            if attempt < max_retries - 1:
+                delay = INITIAL_RETRY_DELAY * (RETRY_BACKOFF_FACTOR ** attempt)
+                time.sleep(delay)
+            else:
+                # Last attempt failed
+                return []
+    
+    return []
+
 
 def get_stock_history(symbol, timespan, start_date, end_date):
     """
@@ -67,7 +119,7 @@ def get_stock_history(symbol, timespan, start_date, end_date):
         end_date: End date for history
         
     Returns:
-        list: List of historical prices
+        list: List of historical prices, empty list on error
     """
     if not POLYGON_AVAILABLE:
         return []
@@ -77,8 +129,7 @@ def get_stock_history(symbol, timespan, start_date, end_date):
     try:
         aggs = client.get_aggs(symbol, 1, timespan, start_date, end_date, sort='asc', adjusted=True)
         return history_to_dict(aggs)
-    except Exception as e:
-        print(f"Error fetching history for {symbol}: {e}")
+    except Exception:
         return []
 
 def history_to_dict(history: list) -> list[dict]:

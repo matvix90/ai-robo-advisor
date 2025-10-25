@@ -1,5 +1,13 @@
 import pandas as pd
 import numpy as np
+from typing import Dict, List, Optional, Tuple
+
+
+class AnalysisWarning:
+    """Represents warnings during portfolio analysis."""
+    def __init__(self, message: str, affected_tickers: List[str] = None):
+        self.message = message
+        self.affected_tickers = affected_tickers or []
 
 def calculate_performance_metrics(price_series: pd.Series, risk_free_rate: float = 0.02) -> dict:
     """
@@ -95,7 +103,13 @@ def calculate_relative_metrics(asset_returns: pd.Series, benchmark_returns: pd.S
     }
 
 
-def analyze_portfolio(tickers_data: dict, benchmark_data: list, weights: dict = None, risk_free_rate: float = 0.02) -> dict:
+def analyze_portfolio(
+    tickers_data: dict, 
+    benchmark_data: list, 
+    weights: dict = None, 
+    risk_free_rate: float = 0.02,
+    allow_partial: bool = True
+) -> Tuple[dict, Optional[AnalysisWarning]]:
     """
     Performs a comprehensive analysis of a portfolio against a benchmark.
 
@@ -104,9 +118,15 @@ def analyze_portfolio(tickers_data: dict, benchmark_data: list, weights: dict = 
         benchmark_data (list): List of OHLCV dicts for the benchmark.
         weights (dict, optional): {ticker: weight}. Defaults to equal weights.
         risk_free_rate (float, optional): Annual risk-free rate.
+        allow_partial (bool, optional): If True, continues with partial data when some tickers fail.
 
     Returns:
-        dict: A nested dictionary with metrics for tickers, the portfolio, and the benchmark.
+        tuple: A tuple containing:
+            - dict: A nested dictionary with metrics for tickers, the portfolio, and the benchmark.
+            - AnalysisWarning: Warning object if there were issues, None otherwise.
+            
+    Raises:
+        ValueError: If critical validation fails or insufficient data.
     """
     if not tickers_data:
         raise ValueError("tickers_data cannot be empty")
@@ -114,18 +134,39 @@ def analyze_portfolio(tickers_data: dict, benchmark_data: list, weights: dict = 
     if not benchmark_data:
         raise ValueError("benchmark_data cannot be empty")
 
+    warnings = []
+    skipped_tickers = []
+
     # 1. Prepare DataFrames
     all_prices = {}
     try:
         for ticker, data in tickers_data.items():
             if not data:
-                raise ValueError(f"No data provided for ticker: {ticker}")
+                if allow_partial:
+                    skipped_tickers.append(ticker)
+                    continue
+                else:
+                    raise ValueError(f"No data provided for ticker: {ticker}")
             
-            df = pd.DataFrame(data).set_index(pd.to_datetime(pd.DataFrame(data)['date']))
-            if 'close' not in df.columns:
-                raise ValueError(f"Missing 'close' column for ticker: {ticker}")
-            
-            all_prices[ticker] = df['close']
+            try:
+                df = pd.DataFrame(data).set_index(pd.to_datetime(pd.DataFrame(data)['date']))
+                if 'close' not in df.columns:
+                    if allow_partial:
+                        skipped_tickers.append(ticker)
+                        continue
+                    else:
+                        raise ValueError(f"Missing 'close' column for ticker: {ticker}")
+                
+                all_prices[ticker] = df['close']
+            except Exception as e:
+                if allow_partial:
+                    skipped_tickers.append(ticker)
+                    continue
+                else:
+                    raise ValueError(f"Error processing data for ticker {ticker}: {str(e)}")
+        
+        if not all_prices:
+            raise ValueError("No valid ticker data could be processed")
         
         benchmark_df = pd.DataFrame(benchmark_data).set_index(pd.to_datetime(pd.DataFrame(benchmark_data)['date']))
         if 'close' not in benchmark_df.columns:
@@ -133,7 +174,23 @@ def analyze_portfolio(tickers_data: dict, benchmark_data: list, weights: dict = 
         
         all_prices['benchmark'] = benchmark_df['close']
     except (KeyError, ValueError) as e:
+        if "No valid ticker data" in str(e) or "benchmark" in str(e):
+            raise
         raise ValueError(f"Error processing input data: {str(e)}")
+
+    # Adjust weights for skipped tickers
+    if skipped_tickers:
+        if weights:
+            # Remove skipped tickers from weights and renormalize
+            adjusted_weights = {k: v for k, v in weights.items() if k not in skipped_tickers}
+            if adjusted_weights:
+                weight_sum = sum(adjusted_weights.values())
+                original_sum = sum(weights.values())
+                weights = {k: (v / weight_sum) * original_sum for k, v in adjusted_weights.items()}
+            else:
+                weights = None
+        
+        warnings.append(f"Skipped {len(skipped_tickers)} ticker(s) due to data issues: {', '.join(skipped_tickers)}")
 
     # Align all prices, forward-fill missing values, then drop any remaining NaNs
     prices_df = pd.DataFrame(all_prices).ffill().dropna()
@@ -144,6 +201,9 @@ def analyze_portfolio(tickers_data: dict, benchmark_data: list, weights: dict = 
     benchmark_prices = prices_df['benchmark']
     ticker_prices = prices_df.drop(columns=['benchmark'])
     
+    if ticker_prices.empty:
+        raise ValueError("No valid ticker data remains after alignment and cleanup")
+    
     # 2. Calculate Returns
     returns_df = prices_df.pct_change().dropna()
     if returns_df.empty:
@@ -153,19 +213,39 @@ def analyze_portfolio(tickers_data: dict, benchmark_data: list, weights: dict = 
     ticker_returns = returns_df.drop(columns=['benchmark'])
 
     # 3. Analyze Benchmark
-    analysis_results = {
-        'benchmark': calculate_performance_metrics(benchmark_prices, risk_free_rate)
-    }
+    try:
+        analysis_results = {
+            'benchmark': calculate_performance_metrics(benchmark_prices, risk_free_rate)
+        }
+    except ValueError as e:
+        raise ValueError(f"Failed to analyze benchmark: {str(e)}")
 
     # 4. Analyze Individual Tickers
     analysis_results['tickers'] = {}
+    failed_ticker_analysis = []
+    
     for ticker in ticker_prices.columns:
         try:
             perf_metrics = calculate_performance_metrics(ticker_prices[ticker], risk_free_rate)
             rel_metrics = calculate_relative_metrics(ticker_returns[ticker], benchmark_returns, risk_free_rate)
             analysis_results['tickers'][ticker] = {**perf_metrics, **rel_metrics}
         except ValueError as e:
-            raise ValueError(f"Error analyzing ticker {ticker}: {str(e)}")
+            if allow_partial:
+                failed_ticker_analysis.append(ticker)
+            else:
+                raise ValueError(f"Error analyzing ticker {ticker}: {str(e)}")
+    
+    if failed_ticker_analysis:
+        warnings.append(f"Could not analyze {len(failed_ticker_analysis)} ticker(s): {', '.join(failed_ticker_analysis)}")
+        # Remove failed tickers from further processing
+        ticker_prices = ticker_prices.drop(columns=failed_ticker_analysis)
+        ticker_returns = ticker_returns.drop(columns=failed_ticker_analysis)
+        if weights:
+            for ticker in failed_ticker_analysis:
+                weights.pop(ticker, None)
+    
+    if ticker_prices.empty:
+        raise ValueError("No tickers could be successfully analyzed")
 
     # 5. Analyze Portfolio
     # Normalize weights
@@ -173,21 +253,35 @@ def analyze_portfolio(tickers_data: dict, benchmark_data: list, weights: dict = 
         num_tickers = len(ticker_prices.columns)
         weights_array = np.array([1 / num_tickers] * num_tickers)
     else:
-        weights_array = np.array([weights.get(t, 0) for t in ticker_prices.columns])
+        # Only use weights for tickers that we have
+        available_tickers = ticker_prices.columns.tolist()
+        weights_array = np.array([weights.get(t, 0) for t in available_tickers])
+        
         if weights_array.sum() == 0:
-            raise ValueError("Portfolio weights sum to zero")
-        weights_array /= weights_array.sum()  # Ensure they sum to 1
+            # Fallback to equal weights if all specified weights are zero
+            num_tickers = len(available_tickers)
+            weights_array = np.array([1 / num_tickers] * num_tickers)
+            warnings.append("Portfolio weights were zero or invalid; using equal weights")
+        else:
+            weights_array /= weights_array.sum()  # Ensure they sum to 1
 
-    portfolio_returns = ticker_returns.dot(weights_array)
-    
-    # Create a synthetic price series for the portfolio to calculate metrics
-    portfolio_prices = (1 + portfolio_returns).cumprod() * 100  # Start at 100 for simplicity
-    
     try:
+        portfolio_returns = ticker_returns.dot(weights_array)
+        
+        # Create a synthetic price series for the portfolio to calculate metrics
+        portfolio_prices = (1 + portfolio_returns).cumprod() * 100  # Start at 100 for simplicity
+        
         portfolio_perf_metrics = calculate_performance_metrics(portfolio_prices, risk_free_rate)
         portfolio_rel_metrics = calculate_relative_metrics(portfolio_returns, benchmark_returns, risk_free_rate)
         analysis_results['portfolio'] = {**portfolio_perf_metrics, **portfolio_rel_metrics}
     except ValueError as e:
         raise ValueError(f"Error analyzing portfolio: {str(e)}")
 
-    return analysis_results
+    # Compile all warnings
+    warning_obj = None
+    if warnings or skipped_tickers or failed_ticker_analysis:
+        all_affected = list(set(skipped_tickers + failed_ticker_analysis))
+        warning_message = " ".join(warnings) if warnings else "Some tickers had issues during analysis"
+        warning_obj = AnalysisWarning(warning_message, all_affected)
+
+    return analysis_results, warning_obj

@@ -140,7 +140,7 @@ class TestAllDataFetching:
     @patch('src.utils.analysis_data.get_today_date')
     def test_all_data_missing_portfolio_tickers(self, mock_today, mock_two_years_ago,
                                                 mock_fetch, sample_portfolio):
-        """Test error when some portfolio ticker data is missing."""
+        """Test error when some portfolio ticker data is missing with allow_partial=False."""
         mock_two_years_ago.return_value = '2023-01-01'
         mock_today.return_value = '2025-01-01'
         mock_fetch.return_value = {
@@ -150,14 +150,14 @@ class TestAllDataFetching:
         }
         
         with pytest.raises(ValueError, match="Failed to fetch data for portfolio tickers"):
-            all_data(sample_portfolio, "ACWI")
+            all_data(sample_portfolio, "ACWI", allow_partial=False)
 
     @patch('src.utils.analysis_data.fetch_histories_concurrently')
     @patch('src.utils.analysis_data.get_two_year_ago_date')
     @patch('src.utils.analysis_data.get_today_date')
     def test_all_data_insufficient_data_points(self, mock_today, mock_two_years_ago,
                                                mock_fetch, sample_portfolio):
-        """Test error when ticker has insufficient data points."""
+        """Test error when ticker has insufficient data points with allow_partial=False."""
         mock_two_years_ago.return_value = '2023-01-01'
         mock_today.return_value = '2025-01-01'
         mock_fetch.return_value = {
@@ -168,7 +168,7 @@ class TestAllDataFetching:
         }
         
         with pytest.raises(ValueError, match="Insufficient data for ticker"):
-            all_data(sample_portfolio, "ACWI")
+            all_data(sample_portfolio, "ACWI", allow_partial=False)
 
     @patch('src.utils.analysis_data.fetch_histories_concurrently')
     @patch('src.utils.analysis_data.get_two_year_ago_date')
@@ -188,8 +188,8 @@ class TestAllDataFetching:
         }
         mock_fetch.return_value = mock_data
         
-        # Execute
-        portfolio_data, benchmark_data, weights = all_data(sample_portfolio, 'ACWI')
+        # Execute - note the new return signature with 4 values
+        portfolio_data, benchmark_data, weights, warning = all_data(sample_portfolio, 'ACWI')
         
         # Verify
         assert 'VTI' in portfolio_data
@@ -201,3 +201,4 @@ class TestAllDataFetching:
         assert weights['VTI'] == 60.0
         assert weights['BND'] == 30.0
         assert weights['VNQ'] == 10.0
+        assert warning is None  # No warnings for successful fetch

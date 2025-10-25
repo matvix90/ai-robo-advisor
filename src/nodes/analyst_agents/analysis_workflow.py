@@ -1,8 +1,8 @@
 from langgraph.graph import StateGraph, END
 
-from graph.state import State
-from data.models import AnalysisResponse
-from utils.check_performance import check_performance
+from src.graph.state import State
+from src.data.models import AnalysisResponse
+from src.utils.check_performance import check_performance
 from . import alignment, diversification, fees, performance
 
 def start(state: State) -> State:
