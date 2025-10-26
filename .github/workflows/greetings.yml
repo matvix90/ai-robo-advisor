@@ -1,0 +1,56 @@
+name: Greetings
+
+on:
+  pull_request:
+    types:
+      - opened
+  issues:
+    types:
+      - opened
+
+permissions:
+  issues: write
+  pull-requests: write
+
+jobs:
+  greeting:
+    name: Greet First-Time Contributors
+    runs-on: ubuntu-latest
+
+    steps:
+      - uses: actions/first-interaction@v3.1.0
+        with:
+          issue-message: |
+            # 🤖 Welcome to AI Robo Advisor and thanks for opening your first issue!
+
+            **What's next:**
+            - We'll review within 24-48 hours
+            - Check our [Contributing Guide](https://github.com/matvix90/ai-robo-advisor/blob/main/CONTRIBUTING.md) to get started
+            - Browse [good first issues](https://github.com/matvix90/ai-robo-advisor/labels/good%20first%20issue) if you want to contribute
+
+            **Need help?** Check [Discussions](https://github.com/matvix90/ai-robo-advisor/discussions) or our [Documentation](https://github.com/matvix90/ai-robo-advisor#readme)
+
+            **Disclaimer:** This project is for educational purposes only, not financial advice.
+
+            Thanks for contributing! 🚀
+          pr-message: |
+            # 🤖 Welcome to AI Robo Advisor and thanks for opening your first PR!
+
+            **Review process:**
+            - Automated checks will run
+            - We'll review within 24-48 hours
+            - Feel free to ask questions!
+
+            **Before merge, please ensure:**
+            - [ ] Tests pass (`pytest tests/ -v`)
+            - [ ] Code follows our style
+            - [ ] Documentation updated if needed
+
+            **Resources:**
+            - [Contributing Guide](https://github.com/matvix90/ai-robo-advisor/blob/main/CONTRIBUTING.md)
+            - [Agent Development Guide](https://github.com/matvix90/ai-robo-advisor/blob/main/AGENTS.md)
+
+            **Disclaimer:** Educational project only, not financial advice.
+
+            Thanks for contributing!
+            *- @matvix90*
