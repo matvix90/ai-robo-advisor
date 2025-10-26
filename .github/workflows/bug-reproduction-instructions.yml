@@ -1,0 +1,96 @@
+name: Bug Reproduction Instructions
+
+on:
+  issues:
+    types: [opened, edited]
+  pull_request:
+    types: [opened, edited]
+
+jobs:
+  check-bug-reproduction:
+    runs-on: ubuntu-latest
+    if: |
+      (github.event_name == 'issues' && contains(github.event.issue.labels.*.name, 'bug')) ||
+      (github.event_name == 'pull_request' && contains(github.event.pull_request.labels.*.name, 'bug'))
+    
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Get issue/PR content
+        id: get-content
+        run: |
+          if [ "${{ github.event_name }}" = "issues" ]; then
+            echo "content=${{ github.event.issue.body }}" >> $GITHUB_OUTPUT
+            echo "number=${{ github.event.issue.number }}" >> $GITHUB_OUTPUT
+            echo "type=issue" >> $GITHUB_OUTPUT
+          else
+            echo "content=${{ github.event.pull_request.body }}" >> $GITHUB_OUTPUT
+            echo "number=${{ github.event.pull_request.number }}" >> $GITHUB_OUTPUT
+            echo "type=pr" >> $GITHUB_OUTPUT
+          fi
+
+      - name: Check for reproduction steps
+        id: check-reproduction
+        run: |
+          CONTENT="${{ steps.get-content.outputs.content }}"
+          
+          # Check for common reproduction keywords (case insensitive)
+          if echo "$CONTENT" | grep -qi -E "(steps to reproduce|reproduction steps|how to reproduce|reproduce|reproduction|steps:|1\.|2\.|3\.|step 1|step 2|step 3)"; then
+            echo "has_reproduction=true" >> $GITHUB_OUTPUT
+          else
+            echo "has_reproduction=false" >> $GITHUB_OUTPUT
+          fi
+
+      - name: Post reproduction checklist
+        if: steps.check-reproduction.outputs.has_reproduction == 'false'
+        uses: actions/github-script@v7
+        with:
+          script: |
+            const { type, number } = ${{ toJson(steps.get-content.outputs) }};
+            const isIssue = type === 'issue';
+            const itemType = isIssue ? 'issue' : 'pull request';
+            const itemNumber = number;
+            
+            const checklist = `## 🐛 Bug Reproduction Checklist
+            
+            To help us triage and fix this bug more efficiently, please provide the following information:
+            
+            ### 📋 Required Information
+            - [ ] **Steps to reproduce**: Clear, numbered steps to reproduce the issue
+            - [ ] **Expected behavior**: What should happen?
+            - [ ] **Actual behavior**: What actually happens?
+            - [ ] **Environment details**: 
+              - [ ] OS (e.g., Windows 10, macOS 12, Ubuntu 20.04)
+              - [ ] Python version
+              - [ ] Package version
+              - [ ] Any relevant configuration
+            
+            ### 🔍 Additional Helpful Information
+            - [ ] **Error messages**: Full error traceback if applicable
+            - [ ] **Screenshots**: Visual evidence of the issue
+            - [ ] **Logs**: Relevant log output
+            - [ ] **Minimal example**: Smallest code snippet that reproduces the issue
+            - [ ] **Related issues**: Links to similar issues or PRs
+            
+            ### 📝 Template
+            You can use our [bug report template](/.github/ISSUE_TEMPLATE/bug_report.md) as a starting point.
+            
+            ---
+            *This checklist was automatically added because this ${itemType} is labeled as a bug but doesn't appear to contain reproduction steps.*`;
+            
+            if (isIssue) {
+              await github.rest.issues.createComment({
+                owner: context.repo.owner,
+                repo: context.repo.repo,
+                issue_number: itemNumber,
+                body: checklist
+              });
+            } else {
+              await github.rest.issues.createComment({
+                owner: context.repo.owner,
+                repo: context.repo.repo,
+                issue_number: itemNumber,
+                body: checklist
+              });
+            }
