@@ -1,19 +1,19 @@
-from graph.state import State
 from data.models import InvestmentAgent
+from graph.state import State
 
 
 # === Agents ===
-def investment_strategy(state:State) -> State:
+def investment_strategy(state: State) -> State:
     """
-    Collect user investment preferences through interactive questionnaire and 
+    Collect user investment preferences through interactive questionnaire and
     generate investment strategy based on user preferences.
 
     """
     print("Generating investment strategy based on user preferences...\n")
-    
+
     llm = state["metadata"]["investment_llm_agent"]
 
-    portfolio_preferences = state["data"]['investment']['user_preferences']
+    portfolio_preferences = state["data"]["investment"]["user_preferences"]
 
     prompt = f"""Create a comprehensive investment strategy based on the following user preferences:
 
@@ -104,14 +104,17 @@ def investment_strategy(state:State) -> State:
         - Align strategy with investment priority: {portfolio_preferences.investment_priority.value}
         - Ensure all percentages are realistic and sum to 100%"""
 
-    analyst = {"name": "Self-Directed Investor", "description": "Investor who prefers to make their own investment decisions based on personal research and preferences."}
+    analyst = {
+        "name": "Self-Directed Investor",
+        "description": "Investor who prefers to make their own investment decisions based on personal research and preferences.",
+    }
 
     response = llm.with_structured_output(InvestmentAgent).invoke(prompt)
 
     if state["metadata"]["show_reasoning"]:
         print(response.reasoning)
 
-    state["data"]['investment']['strategy'] = response.strategy
-    state["data"]['investment']['analyst'] = analyst
+    state["data"]["investment"]["strategy"] = response.strategy
+    state["data"]["investment"]["analyst"] = analyst
 
     return state

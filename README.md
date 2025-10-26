@@ -110,27 +110,29 @@ Complete Docker environment for consistent, cross-platform development. Eliminat
 cp .env.example .env
 # Edit .env with your API keys
 
-# Validate configuration
-./docker/validate-setup.sh
+# Validate and start (recommended)
+./docker-run.sh validate
+./docker-run.sh
 
-# Start development environment
-docker-compose up
-# Or use helper script
-./docker/docker-helper.sh up
+# Or manual approach
+./docker/validate-setup.sh
+./docker-run.sh up --build
 ```
 
 ### Available Commands
 ```bash
-# Development
-./docker/docker-helper.sh up              # Start with hot-reload
-./docker/docker-helper.sh interactive     # Interactive shell
-./docker/docker-helper.sh test           # Run tests
-./docker/docker-helper.sh down           # Stop containers
+# Quick commands
+./docker-run.sh                       # Start development environment
+./docker-run.sh down                  # Stop containers
+./docker-run.sh logs                  # View logs  
+./docker-run.sh shell                 # Interactive shell
+./docker-run.sh test                  # Run tests
 
-# Direct Docker Compose
-docker-compose up -d                      # Background mode
-docker-compose logs -f                    # View logs
-docker-compose run --rm ai-robo-advisor pytest tests/
+# Advanced usage
+./docker-run.sh interactive           # Development container with tools
+./docker-run.sh prod                  # Production mode
+./docker-run.sh clean                 # Clean up everything
+./docker-run.sh help                  # Show all commands
 ```
 
 ### Docker Architecture

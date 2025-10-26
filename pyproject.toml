@@ -36,14 +36,14 @@ dev = [
     "pytest>=8.4.0,<9.0",
     "pytest-cov>=4.0.0",
     "pytest-mock>=3.12.0",
-    "black>=24.0.0",
-    "flake8>=7.0.0",
+    "ruff>=0.8.0,<1.0",
 ]
 test = [
     "pytest>=8.4.0,<9.0",
     "pytest-cov>=4.0.0",
     "pytest-mock>=3.12.0",
     "pytest-asyncio>=0.21.0",
+    "ruff>=0.8.0,<1.0",
 ]
 
 [project.urls]
@@ -60,7 +60,83 @@ where = ["src"]
 [tool.setuptools.package-dir]
 "" = "src"
 
-[tool.black]
+[tool.ruff]
 line-length = 88
-target-version = ['py39']
-include = '\.pyi?$'
+target-version = "py310"
+
+[tool.ruff.lint]
+select = [
+    "E",   # pycodestyle errors
+    "W",   # pycodestyle warnings
+    "F",   # pyflakes
+    "I",   # isort
+    "B",   # flake8-bugbear
+    "C4",  # flake8-comprehensions
+    "UP",  # pyupgrade
+    "N",   # pep8-naming
+    "S",   # flake8-bandit (security)
+    "T20", # flake8-print
+    "SIM", # flake8-simplify
+    "RUF", # Ruff-specific rules
+]
+ignore = [
+    "E501",  # line too long (handled by formatter)
+    "S101",  # use of assert (common in tests)
+    "T201",  # print statements (useful for debugging)
+    "S311",  # random generators (not cryptographic use)
+]
+fixable = ["ALL"]
+unfixable = []
+
+[tool.ruff.format]
+quote-style = "double"
+indent-style = "space"
+skip-magic-trailing-comma = false
+line-ending = "auto"
+
+[tool.ruff.lint.per-file-ignores]
+"tests/**/*" = ["S101"]  # Allow asserts in tests
+"src/main.py" = ["T201"]  # Allow prints in main entry point
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+python_files = ["test_*.py", "*_test.py"]
+python_classes = ["Test*", "*Tests"]
+python_functions = ["test_*"]
+addopts = [
+    "-v",
+    "--strict-markers",
+    "--tb=short",
+    "--cov=src",
+    "--cov-report=term-missing",
+    "--cov-report=html",
+    "--cov-report=xml",
+    "--cov-branch",
+]
+markers = [
+    "unit: Unit tests for individual components",
+    "integration: Integration tests that test multiple components together", 
+    "llm: Tests that involve LLM interactions (may require API keys)",
+    "slow: Tests that take a long time to run",
+    "api: Tests that make external API calls",
+]
+
+[tool.coverage.run]
+source = ["src"]
+omit = [
+    "*/tests/*",
+    "*/test_*",
+    "*/__pycache__/*",
+    "*/site-packages/*",
+]
+
+[tool.coverage.report]
+exclude_lines = [
+    "pragma: no cover",
+    "def __repr__",
+    "raise AssertionError", 
+    "raise NotImplementedError",
+    "if __name__ == .__main__.:",
+    "if TYPE_CHECKING:",
+    "@abstractmethod",
+]

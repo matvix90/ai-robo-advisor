@@ -1,27 +1,27 @@
-from graph.state import State
 from data.models import PortfolioAgent
+from graph.state import State
 
 
-def create_portfolio(state:State) -> State:
+def create_portfolio(state: State) -> State:
     """
     Create a diversified ETF-based portfolio based on the provided investment strategy.
     """
     print("Creating portfolio based on investment strategy...\n")
 
     llm = state["metadata"]["portfolio_llm_agent"]
-    strategy = state["data"]['investment']['strategy']
-    analyst = state["data"]['investment']['analyst']
+    strategy = state["data"]["investment"]["strategy"]
+    analyst = state["data"]["investment"]["analyst"]
 
     # Get user preferences if available (for enhanced prompting)
-    user_preferences = state["data"]['investment'].get('user_preferences')
-    
+    user_preferences = state["data"]["investment"].get("user_preferences")
+
     # Build enhanced investor profile section if user preferences are available
     investor_profile_section = ""
     enhanced_selection_criteria = ""
     enhanced_reasoning_requirements = ""
     enhanced_goal_section = ""
     enhanced_constraints = ""
-    
+
     if user_preferences:
         investor_profile_section = f"""
         INVESTOR PROFILE:
@@ -38,7 +38,7 @@ def create_portfolio(state:State) -> State:
         - Emergency Fund: {"Yes" if user_preferences.has_emergency_fund else "No"}
         - Liquidity Need: {user_preferences.liquidity_need.value}
         """
-        
+
         enhanced_selection_criteria = f"""
             SELECTION CRITERIA FOR ETFs:
             - Match investor's knowledge level (simpler, broad-market ETFs for beginners: {user_preferences.investment_knowledge.value})
@@ -48,7 +48,7 @@ def create_portfolio(state:State) -> State:
             - Ensure low expense ratios for cost efficiency
             - Consider tax efficiency based on investment horizon ({user_preferences.investment_horizon.value})
         """
-        
+
         enhanced_reasoning_requirements = f"""
             a) INVESTOR CONTEXT:
                 - Explain how the investor's age ({user_preferences.age}) and life stage influence ETF selection
@@ -71,12 +71,12 @@ def create_portfolio(state:State) -> State:
                 - Discuss ongoing contributions and dollar-cost averaging strategy
                 - Explain liquidity considerations based on stated liquidity needs
         """
-        
+
         enhanced_goal_section = f"""
                 * The investor's age group ({user_preferences.age}) and life stage
                 * Primary investment goal ({user_preferences.goal.value}) and purpose ({user_preferences.investment_purpose.value})
         """
-        
+
         enhanced_constraints = f"""
         - **Knowledge-Appropriate**: 
             * For NONE/BASIC knowledge: Use only broad-market, well-known ETFs
@@ -96,17 +96,17 @@ def create_portfolio(state:State) -> State:
             - Ensure low expense ratios for cost efficiency
             - Consider tax efficiency based on investment horizon
         """
-        
+
         enhanced_reasoning_requirements = """
             a) STRATEGY ALIGNMENT:
                 - Justify each specific ETF selection and how it achieves the target asset allocation
                 - Explain how the ETF combination delivers geographical diversification per strategy
                 - Detail how sector diversification targets are met through the selected ETFs
         """
-        
+
         enhanced_goal_section = """
         """
-    
+
     prompt = f"""You are an expert financial portfolio manager tasked with creating an ETF-based portfolio 
     that strictly adheres to a given investment strategy. Your investment style should emulate that of {analyst["name"]}.
 {investor_profile_section}
@@ -158,6 +158,6 @@ def create_portfolio(state:State) -> State:
     portfolio = response.portfolio
     portfolio.strategy = strategy
 
-    state["data"]['portfolio'] = portfolio
+    state["data"]["portfolio"] = portfolio
 
     return state

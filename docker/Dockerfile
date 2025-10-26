@@ -39,7 +39,6 @@ RUN pip install -e ".[dev,test]"
 
 # Copy additional development files
 COPY tests/ ./tests/
-COPY pytest.ini ./
 COPY run_tests.sh ./
 
 # Change ownership to appuser

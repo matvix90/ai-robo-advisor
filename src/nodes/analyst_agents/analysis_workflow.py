@@ -1,16 +1,19 @@
-from langgraph.graph import StateGraph, END
+from langgraph.graph import END, StateGraph
 
-from graph.state import State
 from data.models import AnalysisResponse
+from graph.state import State
 from utils.check_performance import check_performance
+
 from . import alignment, diversification, fees, performance
+
 
 def start(state: State) -> State:
     """Initial state function."""
     print("Starting analysis workflow...\n")
     return state
 
-def is_approved(state:State) -> State:
+
+def is_approved(state: State) -> State:
     llm = state["metadata"]["analyst_llm_agent"]
 
     response = state["data"]["analysis"]
@@ -28,7 +31,7 @@ def is_approved(state:State) -> State:
         state["data"]["analysis"]["is_approved"] = True
     else:
         state["data"]["analysis"]["is_approved"] = False
-    
+
     # Collect all existing advice from individual analyses
     all_advices = []
     if response["expense_ratio"].advices:
@@ -39,9 +42,13 @@ def is_approved(state:State) -> State:
         all_advices.extend(response["alignment"].advices)
     if response["performance"].advices:
         all_advices.extend(response["performance"].advices)
-    
-    advice_summary = "\n".join([f"- {advice}" for advice in all_advices]) if all_advices else "No specific advice provided from individual analyses."
-    
+
+    advice_summary = (
+        "\n".join([f"- {advice}" for advice in all_advices])
+        if all_advices
+        else "No specific advice provided from individual analyses."
+    )
+
     prompt = f"""
     You are a senior financial portfolio analyst with expertise in comprehensive investment assessment and portfolio evaluation.
 
@@ -75,7 +82,7 @@ def is_approved(state:State) -> State:
 
     Maintain a professional, objective tone while being specific about risks and opportunities. Focus on actionable insights that can guide investment decisions.
     """
-    
+
     analysis_response = llm.with_structured_output(AnalysisResponse).invoke(prompt)
     analysis_response.is_approved = state["data"]["analysis"]["is_approved"]
     state["data"]["analysis"]["summary"] = analysis_response
@@ -96,7 +103,7 @@ def create_analyst_graph():
     workflow.add_node("alignment", alignment.analyze_alignment)
     workflow.add_node("performance", performance.analyze_performance)
     workflow.add_node("analyst", is_approved)
-    
+
     # Set entry point
     workflow.set_entry_point("start")
 
