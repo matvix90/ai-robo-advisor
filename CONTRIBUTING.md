@@ -12,6 +12,7 @@ Thank you for your interest in contributing! We welcome contributions from devel
 - [Testing Guidelines](#-testing-guidelines)
 - [Security Guidelines](#-security-guidelines)
 
+<a id="ways-to-contribute"></a>
 ## Ways to Contribute
 
 - 🐛 **Bug Reports**: Report bugs with detailed information
@@ -27,6 +28,7 @@ Thank you for your interest in contributing! We welcome contributions from devel
 All PRs must be meaningful and add value. Read our detailed guidelines:
 👉 [Hacktoberfest Guidelines](https://github.com/matvix90/ai-robo-advisor/discussions/15)
 
+<a id="-getting-started"></a>
 ## 🚀 Getting Started
 
 ### Initial Setup
@@ -57,6 +59,7 @@ All PRs must be meaningful and add value. Read our detailed guidelines:
    python -m pytest tests/ -v
    ```
 
+<a id="-development-workflow"></a>
 ## 🔄 Development Workflow
 
 ### 1. Create Feature Branch
@@ -121,6 +124,7 @@ Closes #123"
 - `style` - Formatting
 - `chore` - Maintenance
 
+<a id="-pull-request-guidelines"></a>
 ## � Pull Request Guidelines
 
 ### Before Submitting
@@ -217,6 +221,7 @@ git add . && git commit -m "fix: resolve failing tests"
 git push origin feature/your-branch
 ```
 
+<a id="-code-standards"></a>
 ## 📝 Code Standards
 
 ### Python Style
@@ -254,6 +259,7 @@ def analyze_portfolio_risk(portfolio: Portfolio, strategy: Strategy) -> RiskAnal
     return RiskAnalysis(...)
 ```
 
+<a id="-testing-guidelines"></a>
 ## 🧪 Testing Guidelines
 
 **All contributions must include comprehensive tests.** Maintain 90%+ coverage for new code.
@@ -331,6 +337,7 @@ class TestFeatureName:
 - Skip error testing
 - Write overly complex tests
 
+<a id="-security-guidelines"></a>
 ## 🔒 Security Guidelines
 
 **Essential security practices:**
