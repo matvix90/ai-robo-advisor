@@ -2,27 +2,17 @@
 
 Thank you for your interest in contributing! We welcome contributions from developers of all skill levels.
 
-
 ## Table of Contents
 
+- [Ways to Contribute](#ways-to-contribute)
+- [Getting Started](#-getting-started)
+- [Development Workflow](#-development-workflow)
+- [Pull Request Guidelines](#-pull-request-guidelines)
+- [Code Standards](#-code-standards)
+- [Testing Guidelines](#-testing-guidelines)
+- [Security Guidelines](#-security-guidelines)
 
-- [How to Contribute](#how-to-contribute)
-- [Hacktoberfest Guidelines](#hacktoberfest-guidelines)
-- [Getting Started](#getting-started)
-- [Development Workflow](#development-workflow)
-- [Creating Quality Pull Requests](#creating-quality-pull-requests)
-- [Code Standards](#code-standards)
-- [Testing Guidelines](#testing-guidelines)
-- [Documentation Requirements](#documentation-requirements)
-- [Security Guidelines](#security-guidelines)
-- [Thank You](#thank-you)
-- [Community](#community)
-
-
-
-
-<a id="how-to-contribute"></a>
-
+<a id="ways-to-contribute"></a>
 ## Ways to Contribute
 
 - 🐛 **Bug Reports**: Report bugs with detailed information
@@ -31,52 +21,19 @@ Thank you for your interest in contributing! We welcome contributions from devel
 - 💻 **Code**: Fix bugs, implement features, or optimize performance
 - 🧪 **Testing**: Write tests and improve coverage
 - 🎨 **UI/UX**: Improve user interface and experience
-- 🔧 **DevOps**: Improve CI/CD, Docker, deployment processes
-- 🌍 **Localization**: Add multi-language support
-
-<a id="hacktoberfest-guidelines"></a>
-
-##  Hacktoberfest Guidelines
+- 🔧 **DevOps**: Improve CI/CD, Docker, deployment
 
 ### 🎃 Hacktoberfest Participants
 
 All PRs must be meaningful and add value. Read our detailed guidelines:
 👉 [Hacktoberfest Guidelines](https://github.com/matvix90/ai-robo-advisor/discussions/15)
 
-**Key Hacktoberfest Rules:**
-- All PRs must be meaningful and add value
-- No spam or low-quality contributions
-- Focus on priority features listed below
-- Follow all guidelines in this document
-
-<a id="getting-started"></a>
-
-##  Getting Started
+<a id="-getting-started"></a>
+## 🚀 Getting Started
 
 ### Initial Setup
 
-7. **Set up environment variables:**
-   ```bash
-   cp .env.example .env
-   # Add your API keys to .env file
-   ```
-
-8. **Test the setup:**
-   ```bash
-   # Run the application
-   run-advisor --show-reasoning
-   
-   # Run the test suite
-   python -m pytest tests/
-   ```
-<a id="development-workflow"></a>
-
-##  Development Workflow
-
-### 1. Fork and Clone
-
-1. **Fork the repository** on GitHub by clicking the "Fork" button
-2. **Clone your fork locally:**
+1. **Fork and clone the repository:**
    ```bash
    git clone https://github.com/YOUR_USERNAME/ai-robo-advisor.git
    cd ai-robo-advisor
@@ -102,6 +59,7 @@ All PRs must be meaningful and add value. Read our detailed guidelines:
    python -m pytest tests/ -v
    ```
 
+<a id="-development-workflow"></a>
 ## 🔄 Development Workflow
 
 ### 1. Create Feature Branch
@@ -142,35 +100,7 @@ python -m pytest tests/ --cov=src --cov-report=html
 run-advisor --show-reasoning
 ```
 
-<a id="creating-quality-pull-requests"></a>
-
-##  Creating Quality Pull Requests
-
-This section provides comprehensive guidelines for creating high-quality PRs that will be accepted quickly and efficiently.
-
-### Before Creating a PR
-
-#### 1. Sync with Main Branch
-
-**Always ensure your branch is up to date with the latest main branch:**
-
-```bash
-# Switch to main and update
-git checkout main
-git pull upstream main
-
-# Switch back to your feature branch
-git checkout feature/your-feature-name
-
-# Merge or rebase main into your branch
-git merge main
-# OR (preferred for cleaner history):
-git rebase main
-```
-
-#### 2. Update Test Suite
-
-**All new functionality must include comprehensive tests:**
+### 4. Commit Changes
 
 Follow conventional commit format:
 
@@ -194,6 +124,7 @@ Closes #123"
 - `style` - Formatting
 - `chore` - Maintenance
 
+<a id="-pull-request-guidelines"></a>
 ## � Pull Request Guidelines
 
 ### Before Submitting
@@ -290,18 +221,8 @@ git add . && git commit -m "fix: resolve failing tests"
 git push origin feature/your-branch
 ```
 
-#### Issue: Low Test Coverage
-```bash
-# Solution: Add more tests
-python -m pytest tests/ --cov=src --cov-report=term-missing
-# Add tests for uncovered lines, then commit
-```
-
----
-
-<a id="code-standards"></a>
-
-##  Code Standards
+<a id="-code-standards"></a>
+## 📝 Code Standards
 
 ### Python Style
 
@@ -338,37 +259,10 @@ def analyze_portfolio_risk(portfolio: Portfolio, strategy: Strategy) -> RiskAnal
     return RiskAnalysis(...)
 ```
 
-### Code Organization
+<a id="-testing-guidelines"></a>
+## 🧪 Testing Guidelines
 
-```python
-# Import order: standard library, third-party, local
-import json
-import logging
-import numpy as np
-from src.data.models import Portfolio
-```
-
-### Security Requirements
-
-```python
-# ✅ Use environment variables for secrets
-API_KEY = os.getenv("POLYGON_API_KEY")
-if not API_KEY:
-    raise ValueError("API_KEY required")
-
-# ✅ Validate inputs
-def validate_portfolio(data: dict):
-    required = ["holdings", "total_value"]
-    for field in required:
-        if field not in data:
-            raise ValueError(f"Missing: {field}")
-```
-<a id="testing-guidelines"></a>
-
-##  Testing Guidelines
-
-
-**All contributions must include comprehensive tests!** Maintain 90%+ coverage for new code.
+**All contributions must include comprehensive tests.** Maintain 90%+ coverage for new code.
 
 ### Test Commands
 
@@ -443,22 +337,8 @@ class TestFeatureName:
 - Skip error testing
 - Write overly complex tests
 
-
-<a id="documentation-requirements"></a>
-
-##  Documentation Requirements
-
-**All code must include proper documentation:**
-
-- **Functions**: Include docstrings with Args, Returns, Raises, and Examples
-- **Classes**: Document purpose, attributes, and usage patterns  
-- **README**: Update for new features and installation requirements
-- **API**: Document public methods with types and examples
-
-
-<a id="security-guidelines"></a>
-
-##  Security Guidelines
+<a id="-security-guidelines"></a>
+## 🔒 Security Guidelines
 
 **Essential security practices:**
 
@@ -488,11 +368,11 @@ def validate_portfolio(data: dict):
 - ❌ Never commit secrets to git
 - ❌ Never trust user input without validation
 
-<a id="thank-you"></a>
+---
 
-## Thank You 
+## 🙏 Thank You
 
-Thank you for contributing to AI Robo Advisor! Your efforts help democratize access to professional-grade investment analysis tools and make financial planning more accessible to everyone.
+Thank you for contributing! Your efforts help democratize access to professional-grade investment analysis tools.
 
 ### Recognition
 
@@ -500,8 +380,6 @@ Contributors are recognized in:
 - GitHub contributors list
 - Release notes for significant contributions
 - Special mentions for major improvements
-
-<a id="community"></a>
 
 ### Community
 
