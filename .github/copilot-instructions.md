@@ -222,12 +222,14 @@ except Exception as e:
 ## 🎯 Copilot Guidance
 
 ### When Coding, Always:
-1. **Follow Agent Pattern** - Functions taking/returning `State`
-2. **Use Pydantic Models** - Validate all data structures
-3. **Include Tests** - All new code needs tests
-4. **Handle Errors** - Graceful failure handling
-5. **Document Code** - Google-style docstrings
-6. **Educational Focus** - This is not financial advice
+1. **Write Clean Code** - Make it shorter, cleaner, and follow best practices
+2. **Activate venv** - Always `source venv/bin/activate` before running src/ or tests/
+3. **Follow Agent Pattern** - Functions taking/returning `State`
+4. **Use Pydantic Models** - Validate all data structures
+5. **Include Tests** - All new code needs tests
+6. **Handle Errors** - Graceful failure handling
+7. **Document Code** - Google-style docstrings
+8. **Educational Focus** - This is not financial advice
 
 ### When Adding Features:
 - Check alignment with multi-agent architecture

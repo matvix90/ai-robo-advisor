@@ -85,6 +85,7 @@ git checkout -b feature/descriptive-name
 - Write clean, readable, well-documented code
 - Follow existing code style and conventions
 - Add comprehensive comments for complex logic
+- **Make code shorter and cleaner following best practices**
 - **Write tests for all new functionality**
 
 ### 3. Test Thoroughly
