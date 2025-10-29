@@ -20,7 +20,7 @@ jobs:
     steps:
       - uses: actions/first-interaction@v3.1.0
         with:
-          issue-message: |
+          issue_message: |
             # 🤖 Welcome to AI Robo Advisor and thanks for opening your first issue!
 
             **What's next:**
@@ -33,7 +33,7 @@ jobs:
             **Disclaimer:** This project is for educational purposes only, not financial advice.
 
             Thanks for contributing! 🚀
-          pr-message: |
+          pr_message: |
             # 🤖 Welcome to AI Robo Advisor and thanks for opening your first PR!
 
             **Review process:**
