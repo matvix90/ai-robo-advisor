@@ -3,7 +3,7 @@ from rich.table import Table
 from rich.panel import Panel
 from rich.text import Text
 from rich import box
-from data.models import Portfolio, Strategy, AnalysisResponse
+from src.data.models import Portfolio, Strategy, AnalysisResponse
 
 console = Console()
 #fixed_error
