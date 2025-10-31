@@ -1,0 +1,173 @@
+name: Auto Close Duplicate Issues
+
+on:
+  issues:
+    types:
+      - opened
+      - reopened
+
+env:
+  SIMILARITY_THRESHOLD: "0.8"
+  DUPLICATE_LABEL: duplicate
+
+jobs:
+  detect-duplicate:
+    if: github.event.issue.pull_request == null
+    runs-on: ubuntu-latest
+    permissions:
+      issues: write
+      contents: read
+    steps:
+      - name: Detect duplicate issues
+        uses: actions/github-script@v7
+        with:
+          script: |
+            const threshold = parseFloat(process.env.SIMILARITY_THRESHOLD || "0.8");
+            const duplicateLabel = process.env.DUPLICATE_LABEL || "duplicate";
+
+            const {
+              issue: { title: newTitle, number: newIssueNumber, body: newBody },
+              repository: { owner: { login: owner }, name: repo },
+            } = context.payload;
+
+            if (!newTitle) {
+              core.info("Issue title is empty, skipping duplicate detection.");
+              return;
+            }
+
+            const normalize = (text) =>
+              text
+                .toLowerCase()
+                .replace(/[^a-z0-9\s]/g, " ")
+                .split(/\s+/)
+                .filter(Boolean);
+
+            const jaccardSimilarity = (a, b) => {
+              const setA = new Set(normalize(a));
+              const setB = new Set(normalize(b));
+              if (setA.size === 0 || setB.size === 0) {
+                return 0;
+              }
+              const intersection = new Set([...setA].filter((word) => setB.has(word)));
+              const union = new Set([...setA, ...setB]);
+              return intersection.size / union.size;
+            };
+
+            const findReferencedIssue = async () => {
+              if (!newBody) {
+                return null;
+              }
+              const match = newBody.match(/#(\d+)/);
+              if (!match) {
+                return null;
+              }
+              const referencedNumber = Number.parseInt(match[1], 10);
+              if (!Number.isFinite(referencedNumber) || referencedNumber === newIssueNumber) {
+                return null;
+              }
+              try {
+                const { data } = await github.rest.issues.get({
+                  owner,
+                  repo,
+                  issue_number: referencedNumber,
+                });
+                if (data && data.state) {
+                  return data;
+                }
+                return null;
+              } catch (error) {
+                if (error.status === 404) {
+                  core.info(`Referenced issue #${referencedNumber} not found.`);
+                  return null;
+                }
+                throw error;
+              }
+            };
+
+            const findSimilarIssue = async () => {
+              const searchQuery = `repo:${owner}/${repo} is:issue "${newTitle.replace(/"/g, "")}" in:title`;
+              const { data } = await github.rest.search.issuesAndPullRequests({
+                q: searchQuery,
+                per_page: 20,
+              });
+
+              let bestMatch = null;
+              for (const item of data.items || []) {
+                if (item.number === newIssueNumber) {
+                  continue;
+                }
+                const similarity = jaccardSimilarity(newTitle, item.title);
+                if (similarity >= threshold) {
+                  if (!bestMatch || similarity > bestMatch.similarity) {
+                    bestMatch = { issue: item, similarity };
+                  }
+                }
+              }
+              return bestMatch ? bestMatch.issue : null;
+            };
+
+            const targetIssue = (await findReferencedIssue()) || (await findSimilarIssue());
+
+            if (!targetIssue) {
+              core.info("No duplicate issue detected.");
+              return;
+            }
+
+            core.info(`Detected duplicate of issue #${targetIssue.number}. Applying label and comment.`);
+
+            const ensureLabelExists = async () => {
+              try {
+                await github.rest.issues.getLabel({
+                  owner,
+                  repo,
+                  name: duplicateLabel,
+                });
+              } catch (error) {
+                if (error.status === 404) {
+                  core.info(`Label "${duplicateLabel}" missing. Creating it.`);
+                  await github.rest.issues.createLabel({
+                    owner,
+                    repo,
+                    name: duplicateLabel,
+                    color: "cfd3d7",
+                    description: "Automatically marked duplicate issue",
+                  });
+                  return;
+                }
+                throw error;
+              }
+            };
+
+            await ensureLabelExists();
+
+            await github.rest.issues.addLabels({
+              owner,
+              repo,
+              issue_number: newIssueNumber,
+              labels: [duplicateLabel],
+            });
+
+            const commentBody = [
+              `Thanks for the report! This looks like a duplicate of #${targetIssue.number}.`,
+              "We're going to consolidate the discussion in the earlier issue to keep things tidy.",
+              "",
+              `Please follow up here: ${targetIssue.html_url}`,
+            ].join("\n");
+
+            await github.rest.issues.createComment({
+              owner,
+              repo,
+              issue_number: newIssueNumber,
+              body: commentBody,
+            });
+
+            if (context.payload.issue.state !== "closed") {
+              await github.rest.issues.update({
+                owner,
+                repo,
+                issue_number: newIssueNumber,
+                state: "closed",
+              });
+            }
+
+            core.info(`Issue #${newIssueNumber} marked as duplicate of #${targetIssue.number} and closed.`);
