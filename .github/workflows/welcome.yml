@@ -1,0 +1,37 @@
+name: Welcome a Contributor
+
+on:
+  issues:
+    types: [opened]
+  pull_request_target:
+    types: [opened]
+
+permissions:
+  contents: read
+
+jobs:
+  welcome:
+    runs-on: ubuntu-latest
+    permissions:
+      issues: write
+      pull-requests: write
+    steps:
+      - uses: plbstl/first-contribution@v4
+        with:
+          contribution-mode: once
+          issue-opened-msg: |
+            Welcome @{fc-author} to AI Robo Advisor and thanks for opening your first issue! We're excited to have you here! 🚀
+            
+            **Need help?**
+            - 📖 Check our [Contributing Guide](https://github.com/matvix90/ai-robo-advisor/blob/main/CONTRIBUTING.md)
+            - 🧩 See [Agent Development Guide](https://github.com/matvix90/ai-robo-advisor/blob/main/AGENTS.md)
+            - 💬 Join the [Discussions](https://github.com/matvix90/ai-robo-advisor/discussions)
+            
+            **⚠️ Disclaimer:** This project is for educational purposes only, not financial advice.
+          pr-opened-msg: |
+            Welcome @{fc-author} to AI Robo Advisor and thanks for opening your first PR! We're excited to have you here! 🚀
+            
+            **Need help?**
+            - 📖 [Contributing Guide](https://github.com/matvix90/ai-robo-advisor/blob/main/CONTRIBUTING.md)
+
+            **⚠️ Disclaimer:** This project is for educational purposes only, not financial advice.
