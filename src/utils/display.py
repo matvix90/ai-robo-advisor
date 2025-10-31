@@ -2,7 +2,7 @@ from rich.console import Console
 from rich.table import Table
 from rich.panel import Panel
 from rich import box
-from src.data.models import Portfolio, Strategy, AnalysisResponse
+from data.models import Portfolio, Strategy, AnalysisResponse
 
 console = Console()
 
@@ -56,7 +56,7 @@ def print_strategy(strategy: Strategy) -> None:
         console.print("[bold red]No strategy to display[/bold red]")
         return
 
-    console.print(Panel.fit("[bold cyan] PORTFOLIO DETAILS[/bold cyan]", style="cyan"))
+    console.print(Panel.fit("[bold cyan] STRATEGY DETAILS[/bold cyan]", style="cyan"))
     console.print(f"[bold white]Name:[/bold white] {strategy.name}")
     if strategy.description:
         console.print(f"[bold white]Description:[/bold white] {strategy.description}")
@@ -118,7 +118,7 @@ def print_analysis_response(analysis_response: AnalysisResponse) -> None:
         console.print("[bold red]No analysis response to display[/bold red]")
         return
 
-    console.print(Panel.fit("[bold cyan] PORTFOLIO DETAILS[/bold cyan]", style="cyan"))
+    console.print(Panel.fit("[bold cyan] ANALYSIS DETAILS[/bold cyan]", style="cyan"))
 
     if hasattr(analysis_response, "is_approved"):
         color = "green" if analysis_response.is_approved else "red"
